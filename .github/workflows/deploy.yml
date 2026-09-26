@@ -23,12 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug ARN (sin exponer el secreto)
-        run: |
-          echo "Longitud del secreto: ${#ROLE_ARN}"
-          echo "Últimos 3 caracteres (código ASCII): $(echo -n "$ROLE_ARN" | tail -c 3 | xxd)"
-        env:
-          ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
