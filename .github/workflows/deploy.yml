@@ -1,0 +1,44 @@
+name: Deploy a S3 + CloudFront
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC: GitHub pide credenciales temporales a AWS, sin llaves guardadas
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: bucket-redes-examen
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # max-age=0: el navegador revalida siempre (respuesta 304 si no cambió), así nunca
+      # mezcla un index.html nuevo con un main.js viejo. s-maxage: CloudFront sí lo guarda,
+      # y la invalidación de abajo lo refresca en cada despliegue.
+      - name: Subir sitio a S3
+        run: |
+          aws s3 sync . "s3://$S3_BUCKET" --delete \
+            --exclude ".git*" --exclude ".claude/*" --exclude "*.md" \
+            --cache-control "public, max-age=0, must-revalidate, s-maxage=86400"
+
+      - name: Invalidar caché de CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
