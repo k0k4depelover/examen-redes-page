@@ -50,6 +50,9 @@ code{font-size:.92em}
   background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--sep)}
 .topbar .brand{font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 @media (max-width:560px){.topbar .brand span{display:none}}
+.topbar .logo{display:flex;flex:none;transition:transform .2s}
+.topbar .logo:hover{transform:rotate(-8deg) scale(1.06)}
+.topbar .logo img{width:28px;height:28px;display:block}
 .topbar .brand span{color:var(--text-2);font-weight:500}
 .topbar .spacer{flex:1}
 .menu-btn{display:none;min-width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:var(--text);font:inherit;cursor:pointer}
