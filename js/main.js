@@ -673,19 +673,62 @@ const Ink = (() => {
   board.querySelectorAll('[data-size]').forEach(b => b.addEventListener('click', () => { size = +b.dataset.size; press('data-size', b.dataset.size); setTool('pen'); }));
   bgSel.addEventListener('change', () => setBg(bgSel.value));
 
-  /* --- Ventana: mostrar/ocultar, mover y redimensionar --- */
-  let rect = null;               // {x,y,w,h} en escritorio, una vez que el usuario la mueve
+  /* --- Ventana: mostrar/ocultar, mover, redimensionar y plegar ---
+     En escritorio se redimensiona desde los 4 bordes y las 4 esquinas. Límites: como máximo casi
+     toda la pantalla sin tapar la barra superior; si el alto baja de COLLAPSE_AT se pliega y
+     queda solo la barra (doble clic en la barra pliega o despliega). El dibujo no se escala. */
+  const MIN_W = 320, MIN_H = 220, COLLAPSE_AT = 120, TOP = 64, M = 8;
+  const barH = () => bar.offsetHeight + 2;       // alto de la ventana plegada (barra + bordes)
+  let rect = null;               // {x,y,w,h} en escritorio, una vez que el usuario la mueve; h = alto desplegada
+  let collapsed = false;
   function applyRect() {
     if (mobile.matches || !rect) {
+      collapsed = false;
+      board.classList.remove('collapsed');
       board.style.left = board.style.top = board.style.width = board.style.height = board.style.right = board.style.bottom = '';
       return;
     }
     const vw = innerWidth, vh = innerHeight;
-    rect.w = Math.max(320, Math.min(rect.w, vw - 16));
-    rect.h = Math.max(220, Math.min(rect.h, vh - 72));
-    rect.x = Math.max(8, Math.min(rect.x, vw - rect.w - 8));
-    rect.y = Math.max(64, Math.min(rect.y, vh - rect.h - 8));
-    Object.assign(board.style, { left: rect.x + 'px', top: rect.y + 'px', width: rect.w + 'px', height: rect.h + 'px', right: 'auto', bottom: 'auto' });
+    rect.w = Math.max(MIN_W, Math.min(rect.w, vw - 2 * M));
+    rect.h = Math.max(MIN_H, Math.min(rect.h, vh - TOP - M));
+    const h = collapsed ? barH() : rect.h;
+    rect.x = Math.max(M, Math.min(rect.x, vw - rect.w - M));
+    rect.y = Math.max(TOP, Math.min(rect.y, vh - h - M));
+    board.classList.toggle('collapsed', collapsed);
+    Object.assign(board.style, { left: rect.x + 'px', top: rect.y + 'px', width: rect.w + 'px', height: h + 'px', right: 'auto', bottom: 'auto' });
+  }
+  function resizeFrom(dir, s, dx, dy) {
+    const vw = innerWidth, vh = innerHeight;
+    const L0 = s.x, R0 = s.x + s.w, T0 = s.y, B0 = s.y + (s.c ? barH() : s.h);
+    if (dir.includes('e')) rect.w = Math.min(Math.max(R0 + dx, L0 + MIN_W), vw - M) - L0;
+    if (dir.includes('w')) { rect.x = Math.max(Math.min(L0 + dx, R0 - MIN_W), M); rect.w = R0 - rect.x; }
+    if (!dir.includes('n') && !dir.includes('s')) return;
+    const raw = dir.includes('s') ? B0 + dy - T0 : B0 - (T0 + dy);
+    if (raw < COLLAPSE_AT) {                     // muy baja: se pliega y recuerda su alto
+      collapsed = true;
+      rect.h = s.h;
+      rect.y = dir.includes('n') ? B0 - barH() : T0;
+      return;
+    }
+    collapsed = false;
+    const h = Math.max(raw, MIN_H);
+    if (dir.includes('s')) {
+      rect.y = T0;
+      rect.h = Math.min(h, vh - M - T0);
+      if (rect.h < MIN_H) { rect.h = MIN_H; rect.y = vh - M - MIN_H; }
+    } else {
+      rect.y = Math.max(B0 - h, TOP);
+      rect.h = B0 - rect.y;
+    }
+  }
+  function ensureRect() {
+    if (!rect) { const r = board.getBoundingClientRect(); rect = { x: r.left, y: r.top, w: r.width, h: r.height }; }
+  }
+  function toggleCollapse() {
+    if (mobile.matches || board.hidden) return;
+    ensureRect();
+    collapsed = !collapsed;
+    applyRect();
   }
   function setOpen(open) {
     board.hidden = !open;
@@ -707,8 +750,8 @@ const Ink = (() => {
       if (mobile.matches || e.button !== 0 || e.target.closest('button,select,label')) return;
       e.preventDefault();
       handle.setPointerCapture(e.pointerId);
-      if (!rect) { const r = board.getBoundingClientRect(); rect = { x: r.left, y: r.top, w: r.width, h: r.height }; }
-      const sx = e.clientX, sy = e.clientY, start = { ...rect };
+      ensureRect();
+      const sx = e.clientX, sy = e.clientY, start = { ...rect, c: collapsed };
       board.classList.add('dragging');
       const move = ev => { onMove(start, ev.clientX - sx, ev.clientY - sy); applyRect(); };
       const up = () => {
@@ -723,10 +766,17 @@ const Ink = (() => {
     });
   }
   draggable(bar, (s, dx, dy) => { rect.x = s.x + dx; rect.y = s.y + dy; });
-  draggable(grip, (s, dx, dy) => {
-    rect.w = Math.min(s.w + dx, innerWidth - s.x - 8);
-    rect.h = Math.min(s.h + dy, innerHeight - s.y - 8);
-  });
+  bar.title = 'Arrastra para mover · doble clic para plegar o desplegar';
+  bar.addEventListener('dblclick', e => { if (!e.target.closest('button,select,label')) toggleCollapse(); });
+  // Bordes y esquinas para redimensionar (la esquina inferior derecha es el asa visible de siempre)
+  draggable(grip, (s, dx, dy) => resizeFrom('se', s, dx, dy));
+  for (const dir of ['n', 's', 'e', 'w', 'ne', 'nw', 'sw']) {
+    const edge = document.createElement('div');
+    edge.className = 'board-edge ' + dir;
+    edge.setAttribute('aria-hidden', 'true');
+    board.appendChild(edge);
+    draggable(edge, (s, dx, dy) => resizeFrom(dir, s, dx, dy));
+  }
   addEventListener('resize', () => { if (!board.hidden) applyRect(); });
   mobile.addEventListener('change', applyRect);
 

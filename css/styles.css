@@ -312,11 +312,27 @@ body.ink-pen .ink-host{touch-action:none}
 .board-area.erasing{cursor:none}
 .board-area canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .board-eraser{position:absolute;left:0;top:0;border:1.5px solid var(--text-2);border-radius:50%;pointer-events:none;display:none;background:rgba(127,127,127,.08)}
-.board-resize{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 50%,var(--text-2) 50%,var(--text-2) 58%,transparent 58%,transparent 70%,var(--text-2) 70%,var(--text-2) 78%,transparent 78%);opacity:.6}
+.board-resize{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 50%,var(--text-2) 50%,var(--text-2) 58%,transparent 58%,transparent 70%,var(--text-2) 70%,var(--text-2) 78%,transparent 78%);opacity:.6;z-index:4}
+/* Bordes invisibles para redimensionar (escritorio) */
+.board-edge{position:absolute;z-index:3;touch-action:none}
+.board-edge.n,.board-edge.s{left:12px;right:12px;height:6px;cursor:ns-resize}
+.board-edge.n{top:0}
+.board-edge.s{bottom:0}
+.board-edge.e,.board-edge.w{top:12px;bottom:12px;width:6px;cursor:ew-resize}
+.board-edge.e{right:0}
+.board-edge.w{left:0}
+.board-edge.ne,.board-edge.nw,.board-edge.sw{width:12px;height:12px}
+.board-edge.ne{top:0;right:0;cursor:nesw-resize}
+.board-edge.nw{top:0;left:0;cursor:nwse-resize}
+.board-edge.sw{bottom:0;left:0;cursor:nesw-resize}
+/* Plegada: solo la barra de título */
+.board.collapsed .board-tools,.board.collapsed .board-area,.board.collapsed .board-resize{display:none}
+.board.collapsed .board-bar{border-bottom:0}
+.board.collapsed .board-edge.e,.board.collapsed .board-edge.w{top:4px;bottom:4px}
 @media (max-width:640px){
   .board{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;height:55vh!important;border-radius:var(--r-s) var(--r-s) 0 0;border-left:0;border-right:0;padding-bottom:env(safe-area-inset-bottom)}
   .board-bar{cursor:default}
-  .board-resize{display:none}
+  .board-resize,.board-edge{display:none}
   .fab-dock{bottom:max(16px,env(safe-area-inset-bottom));right:16px}
   body.board-on .board-fab{display:none}
   body.board-on main{padding-bottom:60vh}
