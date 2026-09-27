@@ -48,9 +48,9 @@ window.CURSOS = [
       {
         id: 'analisis-2/parcial-2',
         titulo: 'Parcial II',
-        etiqueta: 'CLASES 8-17',
-        descripcion: 'Guía del segundo parcial.',
-        proximamente: true      },
+        etiqueta: 'ERP · MVC · COMPONENTES',
+        descripcion: 'ERP Terminus en capas: MVC con DLL, ODBC, el prototipo línea por línea, Seguridad, Navegador, Consultas y Reporteador. Incluye escenarios de examen, cuestionario, juego asociativo, diagramas para dibujar y reto contrarreloj.'
+      },
       {
         id: 'analisis-2/final',
         titulo: 'Examen final',

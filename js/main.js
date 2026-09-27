@@ -338,6 +338,7 @@ function hamCoverSVG() {
   addEventListener('beforeprint', () => $$('details').forEach(d => d.open = true));
 
   // ---- Laboratorio ----
+  if (!$('#hamGo')) return;   // página sin laboratorio
   const onlyBits = s => /^[01\s]*$/.test(s);
   function run(id, fn) { const el = $(id); try { el.innerHTML = fn(); } catch (e) { el.innerHTML = `<p class="errmsg">${e.message}</p>`; } }
   function ham() {
