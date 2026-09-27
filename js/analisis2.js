@@ -7,6 +7,16 @@
   };
   const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
+  /* ---------- Enlaces internos: abrir los <details> que contienen el destino ---------- */
+  function abrirHasta(hash) {
+    let el = null;
+    try { el = hash && hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1))); } catch (e) { }
+    for (let p = el && el.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS' && !p.open) p.open = true;
+  }
+  document.addEventListener('click', e => { const a = e.target.closest('a[href^="#"]'); if (a) abrirHasta(a.getAttribute('href')); }, true);
+  addEventListener('hashchange', () => abrirHasta(location.hash));
+  abrirHasta(location.hash);
+
   /* ---------- Resaltado de sintaxis (C#, SQL, XML) ---------- */
   const CS_KW = new Set(('abstract as base bool break byte case catch char class const continue decimal default do double else enum event false finally float for foreach get set if in int interface internal is long namespace new null object out override params private protected public readonly ref return sealed short static string struct switch this throw true try typeof uint ulong using var virtual void while value partial').split(' '));
   const CS_TYPES = new Set(('DateTime List IEnumerable DataTable DataRow OdbcConnection OdbcCommand OdbcParameter OdbcDataAdapter OdbcException CommandType Exception MessageBox MessageBoxButtons MessageBoxIcon Form EventArgs Convert ValidationContext ValidationResult Validator String Dictionary KeyValuePair Control UserControl AutoCompleteStringCollection AutoCompleteMode AutoCompleteSource Application STAThread Empleados Repositorio RepositorioMaestro RepositorioEmpleados ModeloEmpleado EstadoEntidad ValidacionDatos ComboI ModeloComboI RepositorioComboI TipoPermiso Proveedores RepositorioProveedores FormManualdeUsuario').split(' '));
@@ -239,13 +249,38 @@
   const best = store.get(KEY) || {};
   const listEl = $('#retoList'), panel = $('#retoPanel'), clock = $('#retoClock'), code = $('#retoCode');
   const btnStart = $('#retoStart'), btnPause = $('#retoPause'), btnEnd = $('#retoEnd');
+  const solBtn = $('#retoSolBtn'), work = $('#retoWork'), sol = $('#retoSol'), solBody = $('#retoSolBody');
   const drafts = {};
-  let cur = null, running = false, startedAt = 0, spent = 0, timer = 0, escaped = false;
+  let cur = null, running = false, startedAt = 0, spent = 0, timer = 0, escaped = false, ayuda = false;
 
   const fmt = ms => { const s = Math.floor(Math.abs(ms) / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
   const elapsed = () => spent + (running ? performance.now() - startedAt : 0);
   const badge = c => `<span class="ly ${CAPAS[c][1]}">${CAPAS[c][0]}</span>`;
-  const bestTxt = r => { const b = best[r.id]; return b ? `Mejor: ${b.pct}% en ${fmt(b.ms)}` : 'Sin intentos'; };
+  const bestTxt = r => { const b = best[r.id]; return b ? `Mejor: ${b.pct}% en ${fmt(b.ms)}${b.ayuda ? ' (con ayuda)' : ''}` : 'Sin intentos'; };
+  const rank = r => [r.ayuda ? 0 : 1, r.pct, -r.ms];
+  const mejor = (a, b) => { const x = rank(a), y = rank(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i]; return false; };
+  function paintMeta() {
+    $('#retoMeta').innerHTML = `${badge(cur.capa)} · tiempo sugerido ${cur.min} min · ${bestTxt(cur)}` + (ayuda ? ' · <span class="reto-ayuda">👀 con ayuda</span>' : '');
+  }
+  function cloneRefs(target) {
+    target.innerHTML = '';
+    cur.ref.forEach(id => {
+      const pre = document.getElementById(id); if (!pre) return;
+      const box = (pre.closest('.codebox') || pre).cloneNode(true);
+      box.removeAttribute('id'); box.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+      target.appendChild(box);
+    });
+  }
+  function setSplit(on) {
+    work.classList.toggle('split', on);
+    sol.hidden = !on;
+    solBtn.setAttribute('aria-pressed', String(on));
+    solBtn.textContent = on ? '🙈 Ocultar solución' : '👀 Ver solución';
+    if (on && cur) {
+      if (solBody.dataset.for !== cur.id) { cloneRefs(solBody); solBody.dataset.for = cur.id; solBody.scrollTop = 0; }
+      if (!ayuda) { ayuda = true; paintMeta(); }
+    }
+  }
 
   function renderList() {
     listEl.innerHTML = RETOS.map(r => `<button type="button" class="reto-card" data-id="${r.id}" aria-pressed="${cur && cur.id === r.id}"><span class="t">${r.titulo}</span><span class="m">${badge(r.capa)} ⏱ ${r.min} min</span><span class="best">${bestTxt(r)}</span></button>`).join('');
@@ -264,15 +299,19 @@
     btnPause.disabled = true; btnPause.textContent = 'Pausar';
     btnEnd.disabled = true;
     $('#retoResult').hidden = true;
+    ayuda = !sol.hidden;
+    if (cur) paintMeta();
     paintClock();
   }
   function select(id) {
     if (cur) drafts[cur.id] = code.value;
     cur = RETOS.find(r => r.id === id);
+    setSplit(false);
     resetClock();
+    ayuda = false;
     code.value = drafts[id] || '';
     $('#retoTitulo').textContent = cur.titulo;
-    $('#retoMeta').innerHTML = `${badge(cur.capa)} · tiempo sugerido ${cur.min} min · ${bestTxt(cur)}`;
+    paintMeta();
     $('#retoEnun').innerHTML = `<p>${cur.enun}</p>`;
     panel.hidden = false;
     renderList();
@@ -282,10 +321,10 @@
     const boxes = $$('#retoCheck input');
     const n = boxes.filter(b => b.checked).length, pct = boxes.length ? Math.round(100 * n / boxes.length) : 0;
     const ms = elapsed(), over = ms - cur.min * 60000;
-    $('#retoSum').innerHTML = `<span class="big">${pct}%</span><span>${n} de ${boxes.length} puntos</span><span>⏱ ${fmt(ms)}${over > 0 ? ` (te pasaste ${fmt(over)})` : ' (a tiempo)'}</span>`;
-    const b = best[cur.id];
-    if (!b || pct > b.pct || (pct === b.pct && ms < b.ms)) { best[cur.id] = { pct, ms }; store.set(KEY, best); renderList(); }
-    $('#retoMeta').innerHTML = `${badge(cur.capa)} · tiempo sugerido ${cur.min} min · ${bestTxt(cur)}`;
+    $('#retoSum').innerHTML = `<span class="big">${pct}%</span><span>${n} de ${boxes.length} puntos</span><span>⏱ ${fmt(ms)}${over > 0 ? ` (te pasaste ${fmt(over)})` : ' (a tiempo)'}</span>` + (ayuda ? '<span class="reto-ayuda">👀 con ayuda</span>' : '');
+    const intento = { pct, ms, ayuda };
+    if (!best[cur.id] || mejor(intento, best[cur.id])) { best[cur.id] = intento; store.set(KEY, best); renderList(); }
+    paintMeta();
   }
   function finish() {
     stop();
@@ -295,13 +334,7 @@
       const auto = !!(re && txt.trim() && re.test(txt));
       return `<li><label><input type="checkbox" data-i="${i}"${auto ? ' checked' : ''}><span>${t}</span>${auto ? '<span class="auto">detectado</span>' : (re ? '' : '<span class="auto" style="color:var(--text-2)">revisa tú</span>')}</label></li>`;
     }).join('');
-    const ref = $('#retoRef'); ref.innerHTML = '';
-    cur.ref.forEach(id => {
-      const pre = document.getElementById(id); if (!pre) return;
-      const box = (pre.closest('.codebox') || pre).cloneNode(true);
-      box.removeAttribute('id'); box.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-      ref.appendChild(box);
-    });
+    cloneRefs($('#retoRef'));
     $('#retoResult').hidden = false;
     score();
   }
@@ -320,6 +353,7 @@
     paintClock();
   });
   btnEnd.addEventListener('click', finish);
+  solBtn.addEventListener('click', () => { if (cur) setSplit(sol.hidden); });
   $('#retoReset').addEventListener('click', resetClock);
   $('#retoClear').addEventListener('click', () => { code.value = ''; if (cur) drafts[cur.id] = ''; code.focus(); });
   $('#retoCheck').addEventListener('change', score);
