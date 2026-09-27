@@ -338,6 +338,7 @@ function hamCoverSVG() {
   addEventListener('beforeprint', () => $$('details').forEach(d => d.open = true));
 
   // ---- Laboratorio ----
+  if (!$('#hamGo')) return;   // página sin laboratorio
   const onlyBits = s => /^[01\s]*$/.test(s);
   function run(id, fn) { const el = $(id); try { el.innerHTML = fn(); } catch (e) { el.innerHTML = `<p class="errmsg">${e.message}</p>`; } }
   function ham() {
@@ -744,8 +745,8 @@ const Ink = (() => {
 
 
 /* ===== Anotaciones sobre la página =====
-   Lápiz como el de los PDF en Edge, sobre las secciones de estudio (todo <main> salvo
-   el cuestionario y el laboratorio). Cada sección lleva una capa SVG; cada trazo guarda
+   Lápiz como el de los PDF en Edge, sobre todas las secciones de <main> (incluidos el
+   cuestionario y el laboratorio). Cada sección lleva una capa SVG; cada trazo guarda
    coordenadas relativas a su ancla (el <details> que lo contiene o, si no, la sección),
    así acompaña al contenido cuando algo se abre o se cierra más arriba. Si cambia el
    ancho, se escala en horizontal.
@@ -755,7 +756,7 @@ const Ink = (() => {
 (() => {
   const $ = id => document.getElementById(id);
   const fab = $('inkFab'), board = $('board'), srcTools = board && board.querySelector('.board-tools');
-  const hosts = [...document.querySelectorAll('main > section:not(#quiz):not(#lab)')];
+  const hosts = [...document.querySelectorAll('main > section')];
   if (!fab || !srcTools || !hosts.length) return;
   const body = document.body, SVG = 'http://www.w3.org/2000/svg';
   const ERASER_R = 10, TAP_SLOP = 4, INTERACTIVE = 'a,button,summary,input,select,textarea,label';
