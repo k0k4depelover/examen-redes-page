@@ -1068,9 +1068,14 @@
 </main>
 </div>
 
-<button class="board-fab" id="boardFab" type="button" aria-controls="board" aria-expanded="false" title="Mostrar u ocultar la pizarra">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Pizarra</span>
-</button>
+<div class="fab-dock">
+  <button class="board-fab" id="inkFab" type="button" aria-controls="inkBar" aria-expanded="false" title="Anotar sobre la página (el stylus siempre dibuja)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg><span>Anotar</span>
+  </button>
+  <button class="board-fab" id="boardFab" type="button" aria-controls="board" aria-expanded="false" title="Mostrar u ocultar la pizarra">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Pizarra</span>
+  </button>
+</div>
 <section class="board" id="board" hidden aria-label="Pizarra de borrador">
   <div class="board-bar" id="boardBar">
     <span class="board-title"><span class="grip" aria-hidden="true">⋮⋮</span>Pizarra</span>
