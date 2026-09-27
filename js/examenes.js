@@ -48,7 +48,7 @@ window.CURSOS = [
       {
         id: 'analisis-2/parcial-2',
         titulo: 'Parcial II',
-        etiqueta: 'CLASES 1–7',
+        etiqueta: 'CLASES 8-17',
         descripcion: 'Guía del segundo parcial.',
         proximamente: true      },
       {
