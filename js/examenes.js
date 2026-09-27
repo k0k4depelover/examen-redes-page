@@ -31,5 +31,33 @@ window.CURSOS = [
         proximamente: true
       }
     ]
+  },
+
+    {
+    id: 'analisis-2',
+    nombre: 'Analisis de Sistemas II',
+    detalle: 'Universidad Mariano Gálvez · 2026',
+    examenes: [
+      {
+        id: 'analisis-2/parcial-1',
+        titulo: 'Parcial I',
+        etiqueta: 'CLASES 1–7',
+        descripcion: 'Guía del primer parcial.',
+        proximamente: true
+      },
+      {
+        id: 'analisis-2/parcial-2',
+        titulo: 'Parcial II',
+        etiqueta: 'CLASES 1–7',
+        descripcion: 'Guía del segundo parcial.',
+        proximamente: true      },
+      {
+        id: 'analisis-2/final',
+        titulo: 'Examen final',
+        etiqueta: 'TODO EL CURSO',
+        descripcion: 'Repaso integral del curso.',
+        proximamente: true
+      }
+    ]
   }
 ];
