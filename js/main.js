@@ -306,8 +306,10 @@ function hamCoverSVG() {
   $$('nav.side a').forEach(a => a.addEventListener('click', () => { if (innerWidth <= 1000) setMenu(false); }));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 
-  // Progreso
-  const done = store.get('redes2-done') || {};
+  // Progreso: cada examen usa su propia clave (data-store) y publica un resumen
+  // en 'progreso:<data-exam>' para que el portal muestre el avance en su tarjeta.
+  const storeKey = document.body.dataset.store || 'redes2-done', examId = document.body.dataset.exam;
+  const done = store.get(storeKey) || {};
   const marks = $$('[data-mark]');
   function paint() {
     let c = 0;
@@ -317,8 +319,9 @@ function hamCoverSVG() {
       const link = $(`nav.side a[data-sec="${k}"]`); if (link) link.classList.toggle('is-done', on);
     });
     $('#progress').textContent = `${c} de ${marks.length} repasados`;
+    if (examId) store.set('progreso:' + examId, { done: c, total: marks.length });
   }
-  marks.forEach(b => b.addEventListener('click', () => { done[b.dataset.mark] = !done[b.dataset.mark]; store.set('redes2-done', done); paint(); }));
+  marks.forEach(b => b.addEventListener('click', () => { done[b.dataset.mark] = !done[b.dataset.mark]; store.set(storeKey, done); paint(); }));
   paint();
 
   // Sección activa
