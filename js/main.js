@@ -386,32 +386,12 @@ function hamCoverSVG() {
 })();
 
 
-/* ===== Pizarra flotante =====
-   Trazo a mano alzada con la técnica de perfect-freehand (la que usa Excalidraw):
-   suavizado de la entrada, presión simulada por velocidad y contorno relleno con curvas.
-   Todo vive en memoria: ocultar conserva el dibujo, recargar la página lo borra. */
-(() => {
-  const $ = id => document.getElementById(id);
-  const board = $('board');
-  if (!board) return;
-  const fab = $('boardFab'), bar = $('boardBar'), area = $('boardArea'), grip = $('boardResize');
-  const base = $('boardBase'), live = $('boardLive'), eraserEl = $('boardEraser');
-  const bgSel = $('boardBg'), undoBtn = $('boardUndo'), redoBtn = $('boardRedo'), clearBtn = $('boardClear');
-  const bctx = base.getContext('2d'), lctx = live.getContext('2d');
-  const mobile = matchMedia('(max-width:640px)');
-  const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-  const strokes = [];            // {pts:[{x,y,p}], color, size, sim, path, box}
-  const undoStack = [], redoStack = [];
-  let tool = 'pen', color = '--text', size = 8, bg = 'plain';
-  let W = 0, H = 0, dpr = 1;
-  let active = null;             // pointerId que está dibujando/borrando
-  let cur = null;                // trazo en curso
-  let erasing = null;            // Set de trazos marcados por el borrador
-  let lastErase = null, liveQueued = false;
-  const ERASER_R = 10;
-
-  /* --- Geometría del trazo --- */
+/* ===== Motor de trazo (compartido por la pizarra y las anotaciones) =====
+   Técnica de perfect-freehand (la que usa Excalidraw): suavizado de la entrada,
+   presión simulada por velocidad y contorno relleno con curvas.
+   Un trazo es {pts:[{x,y,p}], size, sim, box}; pathD() devuelve su contorno como
+   datos de path SVG, que sirven igual para <path d> y para new Path2D(). */
+const Ink = (() => {
   const STREAMLINE = 0.5, THINNING = 0.6, RATE = 0.275;
   function addPoint(s, x, y, pressure) {
     const pts = s.pts, prev = pts[pts.length - 1];
@@ -428,13 +408,14 @@ function hamCoverSVG() {
     pts.push({ x: nx, y: ny, p });
   }
   const radius = (s, p) => Math.max(0.6, s.size * (0.5 - THINNING * (0.5 - p)));
+  const f = n => Math.round(n * 100) / 100;
 
-  function outline(s) {
-    const pts = s.pts, n = pts.length, path = new Path2D();
+  // sx escala el trazo en horizontal (anotaciones cuando cambia el ancho de la página)
+  function pathD(s, sx = 1) {
+    const pts = sx === 1 ? s.pts : s.pts.map(q => ({ x: q.x * sx, y: q.y, p: q.p })), n = pts.length;
     if (n < 2) {
-      const q = pts[0];
-      path.arc(q.x, q.y, radius(s, 0.5), 0, Math.PI * 2);
-      return path;
+      const q = pts[0], r = f(radius(s, 0.5));
+      return `M${f(q.x - r)} ${f(q.y)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
     }
     const left = [], right = [];
     for (let i = 0; i < n; i++) {
@@ -461,22 +442,66 @@ function hamCoverSVG() {
       ...right.reverse(),
       ...cap(pts[0], radius(s, pts[0].p), startDir - Math.PI / 2),
     ];
-    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-    const m = poly.length;
-    path.moveTo(...mid(poly[m - 1], poly[0]));
+    const mid = (a, b) => f((a[0] + b[0]) / 2) + ' ' + f((a[1] + b[1]) / 2);
+    const m = poly.length, out = ['M' + mid(poly[m - 1], poly[0])];
     for (let i = 0; i < m; i++) {
       const a = poly[i], b = poly[(i + 1) % m];
-      path.quadraticCurveTo(a[0], a[1], ...mid(a, b));
+      out.push(`Q${f(a[0])} ${f(a[1])} ${mid(a, b)}`);
     }
-    path.closePath();
-    return path;
+    return out.join('') + 'Z';
   }
 
-  function finalize(s) {
-    s.path = outline(s);
+  function bounds(s) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const q of s.pts) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
-    s.box = [x0, y0, x1, y1];
+    return [x0, y0, x1, y1];
+  }
+
+  function segDist(px, py, a, b) {
+    const vx = b.x - a.x, vy = b.y - a.y, l2 = vx * vx + vy * vy;
+    const t = l2 ? Math.max(0, Math.min(1, ((px - a.x) * vx + (py - a.y) * vy) / l2)) : 0;
+    return Math.hypot(px - (a.x + vx * t), py - (a.y + vy * t));
+  }
+  // ¿El círculo de radio r en (x, y) toca el trazo? (requiere s.box)
+  function hits(s, x, y, r) {
+    const reach = r + s.size * 0.5, [x0, y0, x1, y1] = s.box;
+    if (x < x0 - reach || x > x1 + reach || y < y0 - reach || y > y1 + reach) return false;
+    const pts = s.pts;
+    for (let i = 0; i < pts.length; i++) if (segDist(x, y, pts[i], pts[Math.min(i + 1, pts.length - 1)]) <= reach) return true;
+    return false;
+  }
+
+  return { addPoint, pathD, bounds, hits };
+})();
+
+
+/* ===== Pizarra flotante =====
+   Dibuja con el motor Ink sobre dos canvas (base + trazo en curso).
+   Todo vive en memoria: ocultar conserva el dibujo, recargar la página lo borra. */
+(() => {
+  const $ = id => document.getElementById(id);
+  const board = $('board');
+  if (!board) return;
+  const fab = $('boardFab'), bar = $('boardBar'), area = $('boardArea'), grip = $('boardResize');
+  const base = $('boardBase'), live = $('boardLive'), eraserEl = $('boardEraser');
+  const bgSel = $('boardBg'), undoBtn = $('boardUndo'), redoBtn = $('boardRedo'), clearBtn = $('boardClear');
+  const bctx = base.getContext('2d'), lctx = live.getContext('2d');
+  const mobile = matchMedia('(max-width:640px)');
+  const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  const strokes = [];            // {pts:[{x,y,p}], color, size, sim, path, box}
+  const undoStack = [], redoStack = [];
+  let tool = 'pen', color = '--text', size = 8, bg = 'plain';
+  let W = 0, H = 0, dpr = 1;
+  let active = null;             // pointerId que está dibujando/borrando
+  let cur = null;                // trazo en curso
+  let erasing = null;            // Set de trazos marcados por el borrador
+  let lastErase = null, liveQueued = false;
+  const ERASER_R = 10;
+
+  function finalize(s) {
+    s.path = new Path2D(Ink.pathD(s));
+    s.box = Ink.bounds(s);
   }
 
   /* --- Render --- */
@@ -524,7 +549,7 @@ function hamCoverSVG() {
     lctx.clearRect(0, 0, W, H);
     if (!cur || !cur.pts.length) return;
     lctx.fillStyle = cssVar(cur.color);
-    lctx.fill(outline(cur));
+    lctx.fill(new Path2D(Ink.pathD(cur)));
   }
   const queueLive = () => { if (!liveQueued) { liveQueued = true; requestAnimationFrame(drawLive); } };
 
@@ -540,21 +565,10 @@ function hamCoverSVG() {
   new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   /* --- Borrador: marca trazos completos y los quita al soltar (como Excalidraw) --- */
-  function segDist(px, py, a, b) {
-    const vx = b.x - a.x, vy = b.y - a.y, l2 = vx * vx + vy * vy;
-    const t = l2 ? Math.max(0, Math.min(1, ((px - a.x) * vx + (py - a.y) * vy) / l2)) : 0;
-    return Math.hypot(px - (a.x + vx * t), py - (a.y + vy * t));
-  }
   function eraseAt(x, y) {
     let hit = false;
     for (const s of strokes) {
-      if (erasing.has(s)) continue;
-      const reach = ERASER_R + s.size * 0.5, [x0, y0, x1, y1] = s.box;
-      if (x < x0 - reach || x > x1 + reach || y < y0 - reach || y > y1 + reach) continue;
-      const pts = s.pts;
-      for (let i = 0; i < pts.length; i++) {
-        if (segDist(x, y, pts[i], pts[Math.min(i + 1, pts.length - 1)]) <= reach) { erasing.add(s); hit = true; break; }
-      }
+      if (!erasing.has(s) && Ink.hits(s, x, y, ERASER_R)) { erasing.add(s); hit = true; }
     }
     if (hit) redraw();
   }
@@ -577,7 +591,7 @@ function hamCoverSVG() {
       showEraser(x, y); eraseAt(x, y);
     } else {
       cur = { pts: [], color, size, sim: !(e.pointerType === 'pen' && e.pressure > 0) };
-      addPoint(cur, x, y, e.pressure || 0.5);
+      Ink.addPoint(cur, x, y, e.pressure || 0.5);
       queueLive();
     }
   });
@@ -591,7 +605,7 @@ function hamCoverSVG() {
       lastErase = [x, y];
     } else if (cur) {
       const evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
-      for (const ev of evs.length ? evs : [e]) { const [cx, cy] = pos(ev); addPoint(cur, cx, cy, ev.pressure || 0.5); }
+      for (const ev of evs.length ? evs : [e]) { const [cx, cy] = pos(ev); Ink.addPoint(cur, cx, cy, ev.pressure || 0.5); }
       queueLive();
     }
   });
@@ -723,6 +737,260 @@ function hamCoverSVG() {
     else if (mod && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
     else if (!mod && !e.altKey && k === 'p') setTool('pen');
     else if (!mod && !e.altKey && k === 'e') setTool('eraser');
+  });
+
+  syncButtons();
+})();
+
+
+/* ===== Anotaciones sobre la página =====
+   Lápiz como el de los PDF en Edge, sobre las secciones de estudio (todo <main> salvo
+   el cuestionario y el laboratorio). Cada sección lleva una capa SVG; cada trazo guarda
+   coordenadas relativas a su ancla (el <details> que lo contiene o, si no, la sección),
+   así acompaña al contenido cuando algo se abre o se cierra más arriba. Si cambia el
+   ancho, se escala en horizontal.
+   El stylus dibuja siempre; el mouse solo con el modo "Anotar" activo; el dedo nunca.
+   Un toque sin arrastrar sobre un control (enlace, botón, summary…) pasa como clic.
+   Todo vive en memoria: recargar la página lo borra. */
+(() => {
+  const $ = id => document.getElementById(id);
+  const fab = $('inkFab'), board = $('board'), srcTools = board && board.querySelector('.board-tools');
+  const hosts = [...document.querySelectorAll('main > section:not(#quiz):not(#lab)')];
+  if (!fab || !srcTools || !hosts.length) return;
+  const body = document.body, SVG = 'http://www.w3.org/2000/svg';
+  const ERASER_R = 10, TAP_SLOP = 4, INTERACTIVE = 'a,button,summary,input,select,textarea,label';
+
+  const layer = new Map();       // sección → <svg>
+  for (const h of hosts) {
+    const svg = document.createElementNS(SVG, 'svg');
+    svg.setAttribute('class', 'ink-layer');
+    svg.setAttribute('aria-hidden', 'true');
+    h.classList.add('ink-host');
+    h.appendChild(svg);
+    layer.set(h, svg);
+  }
+
+  // Barra: copia de la de la pizarra (misma paleta, grosores e iconos)
+  const bar = srcTools.cloneNode(true);
+  bar.id = 'inkBar'; bar.hidden = true;
+  bar.classList.replace('board-tools', 'ink-bar');
+  bar.setAttribute('aria-label', 'Herramientas de anotación');
+  const acts = { boardUndo: 'undo', boardRedo: 'redo', boardClear: 'clear' };
+  bar.querySelectorAll('[id]').forEach(b => { b.dataset.act = acts[b.id]; b.removeAttribute('id'); });
+  const btn = act => bar.querySelector(`[data-act="${act}"]`);
+  const undoBtn = btn('undo'), redoBtn = btn('redo'), clearBtn = btn('clear');
+  clearBtn.title = 'Borrar todas las anotaciones'; clearBtn.setAttribute('aria-label', clearBtn.title);
+  const closeBtn = document.createElement('button');
+  Object.assign(closeBtn, { type: 'button', className: 'bd-btn', title: 'Terminar de anotar (Esc)' });
+  closeBtn.setAttribute('aria-label', 'Terminar de anotar');
+  closeBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  bar.querySelector('.bd-group').append(closeBtn);
+  const eraserEl = document.createElement('div');
+  eraserEl.className = 'ink-eraser';
+  body.append(bar, eraserEl);
+
+  const strokes = [];            // {host, anchor, inBody, w0, pts, color, size, sim, box, el, sx, ax, ay, vis}
+  const undoStack = [], redoStack = [];
+  let tool = 'pen', color = '--text', size = 8, on = false;
+  let active = null, start = null, moved = false;
+  let cur = null, erasing = null, lastErase = null, liveQueued = false, drewAt = 0;
+
+  /* --- Posición: cada trazo sigue a su ancla --- */
+  function docRect(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, shown: el.getClientRects().length > 0 };
+  }
+  function place(s, rects) {
+    const get = el => { let r = rects.get(el); if (!r) rects.set(el, r = docRect(el)); return r; };
+    const a = get(s.anchor);
+    s.vis = a.shown && !(s.inBody && s.anchor.tagName === 'DETAILS' && !s.anchor.open);
+    s.el.style.display = s.vis ? '' : 'none';
+    if (!s.vis) return;
+    const h = get(s.host), sx = a.w / s.w0 || 1;
+    if (Math.abs(sx - s.sx) > 0.002) { s.sx = sx; s.el.setAttribute('d', Ink.pathD(s, sx)); }
+    s.ax = a.x; s.ay = a.y;
+    s.el.setAttribute('transform', `translate(${a.x - h.x} ${a.y - h.y})`);
+  }
+  function relayout() { const rects = new Map(); for (const s of strokes) place(s, rects); }
+  let layoutQueued = false;
+  function queueLayout() {
+    if (layoutQueued || !strokes.length) return;
+    layoutQueued = true;
+    requestAnimationFrame(() => { layoutQueued = false; relayout(); });
+  }
+  new ResizeObserver(queueLayout).observe(document.querySelector('main'));
+  document.addEventListener('toggle', queueLayout, true);
+  addEventListener('resize', queueLayout);
+
+  /* --- Entrada --- */
+  const hostOf = el => el instanceof Element ? el.closest('.ink-host') : null;
+  const draws = e => e.pointerType === 'pen' || (on && e.pointerType === 'mouse' && e.button === 0);
+  const penEraser = e => e.pointerType === 'pen' && (e.button === 5 || e.button === 2);   // goma o botón lateral
+  const docXY = e => [e.clientX + scrollX, e.clientY + scrollY];
+
+  function showEraser(e) {
+    eraserEl.style.display = 'block';
+    eraserEl.style.width = eraserEl.style.height = ERASER_R * 2 + 'px';
+    eraserEl.style.transform = `translate(${e.clientX - ERASER_R}px,${e.clientY - ERASER_R}px)`;
+  }
+  function eraseAt(x, y) {
+    for (const s of strokes) {
+      if (!s.vis || erasing.has(s)) continue;
+      if (Ink.hits(s, (x - s.ax) / s.sx, y - s.ay, ERASER_R)) { erasing.add(s); s.el.style.opacity = '.2'; }
+    }
+  }
+  function drawLive() {
+    liveQueued = false;
+    if (cur && cur.pts.length) cur.el.setAttribute('d', Ink.pathD(cur));
+  }
+  const queueLive = () => { if (!liveQueued) { liveQueued = true; requestAnimationFrame(drawLive); } };
+
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') body.classList.remove('ink-pen');
+    const host = hostOf(e.target);
+    if (!host || active !== null || !draws(e)) return;
+    const tap = !!e.target.closest(INTERACTIVE);
+    if (!tap) e.preventDefault();          // sin selección de texto ni foco
+    relayout();
+    active = e.pointerId; start = { x: e.clientX, y: e.clientY, host, tap }; moved = false;
+    const [x, y] = docXY(e);
+    if (tool === 'eraser' || penEraser(e)) {
+      erasing = new Set(); lastErase = [x, y];
+      showEraser(e); eraseAt(x, y);
+      return;
+    }
+    const anchor = e.target.closest('details') || host, a = docRect(anchor), h = docRect(host);
+    const el = document.createElementNS(SVG, 'path');
+    el.style.fill = `var(${color})`;
+    el.setAttribute('transform', `translate(${a.x - h.x} ${a.y - h.y})`);
+    layer.get(host).appendChild(el);
+    cur = {
+      host, anchor, inBody: !e.target.closest('summary'), w0: a.w, sx: 1, ax: a.x, ay: a.y, vis: true,
+      pts: [], color, size, sim: !(e.pointerType === 'pen' && e.pressure > 0), el
+    };
+    Ink.addPoint(cur, x - a.x, y - a.y, e.pressure || 0.5);
+    queueLive();
+  }, true);
+
+  document.addEventListener('pointermove', e => {
+    const overHost = hostOf(e.target);
+    if (erasing || (tool === 'eraser' && overHost && (e.pointerType === 'pen' || (on && e.pointerType === 'mouse')))) showEraser(e);
+    else eraserEl.style.display = 'none';
+    if (e.pointerId !== active) return;
+    if (!moved && Math.hypot(e.clientX - start.x, e.clientY - start.y) > TAP_SLOP) {
+      moved = true;
+      // Captura tardía: si se capturara al tocar, el clic de un toque no llegaría al control
+      try { start.host.setPointerCapture(e.pointerId); } catch (err) { }
+    }
+    if (erasing) {                        // muestrea el tramo para no saltarse trazos
+      const [x, y] = docXY(e), [lx, ly] = lastErase, steps = Math.max(1, Math.ceil(Math.hypot(x - lx, y - ly) / 4));
+      for (let k = 1; k <= steps; k++) eraseAt(lx + (x - lx) * k / steps, ly + (y - ly) * k / steps);
+      lastErase = [x, y];
+    } else if (cur) {
+      const evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+      for (const ev of evs.length ? evs : [e]) { const [x, y] = docXY(ev); Ink.addPoint(cur, x - cur.ax, y - cur.ay, ev.pressure || 0.5); }
+      queueLive();
+    }
+  });
+
+  function endPointer(e) {
+    if (e.pointerId !== active) return;
+    active = null;
+    const cancelled = e.type === 'pointercancel';
+    if (erasing) {
+      erasing.forEach(s => { s.el.style.opacity = ''; });
+      if (!cancelled && erasing.size) {
+        const items = [...erasing].map(s => ({ s, i: strokes.indexOf(s) })).sort((a, b) => a.i - b.i);
+        items.forEach(({ s }) => detach(s));
+        record({ type: 'erase', items });
+      }
+      erasing = null;
+      if (tool !== 'eraser') eraserEl.style.display = 'none';
+      if (!cancelled) drewAt = performance.now();
+      return;
+    }
+    if (!cur) return;
+    const s = cur; cur = null;
+    if (cancelled || (start.tap && !moved)) { s.el.remove(); return; }   // toque a un control: que sea clic
+    const [x, y] = docXY(e), last = s.pts[s.pts.length - 1];
+    if (Math.hypot(x - s.ax - last.x, y - s.ay - last.y) > 0.5) s.pts.push({ x: x - s.ax, y: y - s.ay, p: last.p });
+    s.box = Ink.bounds(s);
+    s.el.setAttribute('d', Ink.pathD(s));
+    strokes.push(s);
+    record({ type: 'add', s });
+    drewAt = performance.now();
+  }
+  document.addEventListener('pointerup', endPointer);
+  document.addEventListener('pointercancel', endPointer);
+  // Tras dibujar, el clic que sigue al levantar no debe abrir un details ni seguir un enlace
+  addEventListener('click', e => {
+    if (performance.now() - drewAt < 500 && hostOf(e.target)) { e.preventDefault(); e.stopPropagation(); drewAt = 0; }
+  }, true);
+  document.addEventListener('contextmenu', e => { if (e.pointerType === 'pen' && hostOf(e.target)) e.preventDefault(); });
+
+  // Que el stylus no desplace la página: touch-action se decide al tocar, así que se
+  // activa mientras el lápiz está cerca (hover) y se quita cuando sale de rango.
+  document.addEventListener('pointerover', e => { if (e.pointerType === 'pen') body.classList.add('ink-pen'); });
+  document.addEventListener('pointerout', e => {
+    if (e.pointerType === 'pen' && !e.relatedTarget && active === null) body.classList.remove('ink-pen');
+  });
+  // iPad/Android: el lápiz también genera touch events con touchType "stylus"
+  for (const h of hosts) h.addEventListener('touchstart', e => {
+    if ([...e.changedTouches].some(t => t.touchType === 'stylus') && !e.target.closest(INTERACTIVE)) e.preventDefault();
+  }, { passive: false });
+
+  /* --- Historial --- */
+  function attach(s, i = strokes.length) { strokes.splice(i, 0, s); layer.get(s.host).appendChild(s.el); }
+  function detach(s) { strokes.splice(strokes.indexOf(s), 1); s.el.remove(); }
+  function record(a) { undoStack.push(a); redoStack.length = 0; syncButtons(); }
+  function apply(a, forward) {
+    if (a.type === 'add') forward ? attach(a.s) : detach(a.s);
+    else if (a.type === 'erase') forward ? a.items.forEach(({ s }) => detach(s)) : a.items.forEach(({ s, i }) => attach(s, i));
+    else if (a.type === 'clear') forward ? a.items.forEach(detach) : a.items.forEach(s => attach(s));
+    relayout();
+  }
+  function undo() { const a = undoStack.pop(); if (!a) return; apply(a, false); redoStack.push(a); syncButtons(); }
+  function redo() { const a = redoStack.pop(); if (!a) return; apply(a, true); undoStack.push(a); syncButtons(); }
+  function clearAll() {
+    if (!strokes.length) return;
+    const items = strokes.slice();
+    items.forEach(detach);
+    record({ type: 'clear', items });
+  }
+  function syncButtons() {
+    undoBtn.disabled = !undoStack.length;
+    redoBtn.disabled = !redoStack.length;
+    clearBtn.disabled = !strokes.length;
+  }
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
+  clearBtn.addEventListener('click', clearAll);
+
+  /* --- Herramientas y modo --- */
+  const press = (attr, value) => bar.querySelectorAll(`[${attr}]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(attr) === value)));
+  function setTool(t) { tool = t; press('data-tool', t); body.classList.toggle('ink-erasing', t === 'eraser'); }
+  bar.querySelectorAll('[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+  bar.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => { color = b.dataset.color; press('data-color', color); setTool('pen'); }));
+  bar.querySelectorAll('[data-size]').forEach(b => b.addEventListener('click', () => { size = +b.dataset.size; press('data-size', b.dataset.size); setTool('pen'); }));
+
+  function setOn(v) {
+    on = v; bar.hidden = !v;
+    fab.setAttribute('aria-expanded', String(v));
+    body.classList.toggle('ink-on', v);
+    if (!v) eraserEl.style.display = 'none';
+  }
+  fab.addEventListener('click', () => setOn(!on));
+  closeBtn.addEventListener('click', () => setOn(false));
+
+  /* --- Atajos (modo activo, pizarra cerrada y fuera de campos de texto) --- */
+  document.addEventListener('keydown', e => {
+    if (!on || !board.hidden || e.target.closest('input,textarea,select,[contenteditable]')) return;
+    const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+    if (mod && k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if (mod && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+    else if (!mod && !e.altKey && k === 'p') setTool('pen');
+    else if (!mod && !e.altKey && k === 'e') setTool('eraser');
+    else if (k === 'escape') setOn(false);
   });
 
   syncButtons();
