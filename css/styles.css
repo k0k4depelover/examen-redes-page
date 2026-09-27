@@ -350,6 +350,8 @@ a.exam:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 2px 4p
 
 /* ===== Guía ERP (Análisis de Sistemas II) ===== */
 /* Código fuente con resaltado (analisis2.js marca los tokens) */
+main :not(pre) > code{overflow-wrap:anywhere}
+.grid > *{min-width:0}
 .codebox{margin:14px 0;border-radius:var(--r-s);overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
 .codebox .file{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 14px;background:var(--surface-2);border-bottom:1px solid var(--sep);font:600 12px var(--mono);color:var(--text-2);overflow-wrap:anywhere}
 pre.code{margin:0;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);tab-size:4;white-space:pre;color:var(--text);background:var(--surface)}
@@ -462,8 +464,8 @@ svg.dg .fk{fill:var(--accent);font-weight:700}
 .reto-code:focus{outline:2px solid var(--accent);outline-offset:1px}
 .reto-hint{font-size:13px;color:var(--text-2);margin:6px 0 0}
 .reto-check{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
-.reto-check label{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border-radius:10px;background:var(--surface-2);cursor:pointer;font-size:15px}
-.reto-check input{margin-top:4px;width:18px;height:18px;flex:none;accent-color:var(--ok)}
+.reto-check label{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--surface-2);cursor:pointer;font-size:15px}
+.reto-check input{margin:0;width:18px;height:18px;flex:none;accent-color:var(--ok)}
 .reto-check .auto{margin-left:auto;font:600 11px var(--mono);color:var(--ok);white-space:nowrap}
 .reto-sum{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;font:600 15px var(--font);margin:8px 0}
 .reto-sum .big{font:700 26px var(--mono)}
