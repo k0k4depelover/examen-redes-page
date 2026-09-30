@@ -59,5 +59,33 @@ window.CURSOS = [
         proximamente: true
       }
     ]
+  },
+
+  {
+    id: 'arquitectura-2',
+    nombre: 'Arquitectura de Computadoras II',
+    detalle: 'Universidad Mariano Gálvez · 2026',
+    examenes: [
+      {
+        id: 'arquitectura-2/parcial-1',
+        titulo: 'Parcial I',
+        etiqueta: 'PRIMERA PARTE',
+        descripcion: 'Guía del primer parcial.',
+        proximamente: true
+      },
+      {
+        id: 'arquitectura-2/parcial-2',
+        titulo: 'Parcial II',
+        etiqueta: 'ENSAMBLADOR 8086 · EMU8086',
+        descripcion: 'Registros, segmentos y direcciones físicas, modos de direccionamiento, banderas y complemento a 2, instrucciones del curso, INT 21h e INT 10h y los patrones del profesor. Incluye simulador paso a paso, trazas en papel, banco de 21 ejercicios con comparador y preguntas directas y abiertas.'
+      },
+      {
+        id: 'arquitectura-2/final',
+        titulo: 'Examen final',
+        etiqueta: 'TODO EL CURSO',
+        descripcion: 'Repaso integral del curso.',
+        proximamente: true
+      }
+    ]
   }
 ];

@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arquitectura II · Parcial II</title>
+<meta name="description" content="Guía del Parcial II de Arquitectura de Computadoras II: ensamblador 8086 en EMU8086. Registros, segmentos y direcciones físicas, modos de direccionamiento, banderas, números y complemento a 2, instrucciones del curso e interrupciones, los patrones del profesor (hoja de actividades, labs y examen), simulador paso a paso, trazas en papel y un banco de 21 ejercicios que se revisan solos.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="../../img/logo.svg">
+<link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body data-exam="arquitectura-2/parcial-2" data-store="arqui2-done">
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir índice" aria-expanded="false" aria-controls="side">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+  <a class="back-btn" href="../../index.html" aria-label="Volver a todos los exámenes">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span>Exámenes</span>
+  </a>
+  <div class="brand">Arquitectura de Computadoras II <span>· Guía Parcial II</span></div>
+  <div class="spacer"></div>
+  <div class="progress-pill" id="progress" aria-live="polite">0 de 0 repasados</div>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+<nav class="side" id="side" aria-label="Índice">
+  <a class="side-back" href="../../index.html"><span class="n">←</span>Todos los exámenes</a>
+  <h4>Inicio</h4>
+  <a href="#inicio"><span class="n">00</span>Cómo usar esta guía</a>
+  <a href="#hoja"><span class="n">★</span>Hoja de referencia rápida</a>
+  <h4>El procesador</h4>
+  <a href="#registros" data-sec="r1"><span class="n">R1</span>Los registros<span class="done"></span></a>
+  <a href="#memoria" data-sec="r2"><span class="n">R2</span>Segmentos, memoria y pila<span class="done"></span></a>
+  <a href="#direccionamiento" data-sec="r3"><span class="n">R3</span>Modos de direccionamiento<span class="done"></span></a>
+  <a href="#banderas" data-sec="r4"><span class="n">R4</span>Banderas (FLAGS)<span class="done"></span></a>
+  <a href="#numeros" data-sec="r5"><span class="n">R5</span>Números y complemento a 2<span class="done"></span></a>
+  <h4>El lenguaje</h4>
+  <a href="#estructura" data-sec="l1"><span class="n">L1</span>Estructura del programa<span class="done"></span></a>
+  <a href="#mover" data-sec="l2"><span class="n">L2</span>Mover datos y la pila<span class="done"></span></a>
+  <a href="#aritmetica" data-sec="l3"><span class="n">L3</span>Aritmética<span class="done"></span></a>
+  <a href="#saltos" data-sec="l4"><span class="n">L4</span>Comparar y saltar<span class="done"></span></a>
+  <a href="#ciclos" data-sec="l5"><span class="n">L5</span>Ciclos con LOOP<span class="done"></span></a>
+  <a href="#interrupciones" data-sec="l6"><span class="n">L6</span>INT 21h e INT 10h<span class="done"></span></a>
+  <a href="#prohibido" data-sec="l7"><span class="n">L7</span>Lo que no se usa<span class="done"></span></a>
+  <h4>Patrones del profe</h4>
+  <a href="#escenarios" data-sec="p1"><span class="n">P1</span>Escenarios del examen<span class="done"></span></a>
+  <a href="#errores" data-sec="p2"><span class="n">P2</span>Errores típicos<span class="done"></span></a>
+  <h4>Práctica</h4>
+  <a href="#trazas" data-sec="tr"><span class="n">T</span>Traza de registros<span class="done"></span></a>
+  <a href="#dir-ej" data-sec="dj"><span class="n">D</span>Direcciones físicas<span class="done"></span></a>
+  <a href="#banco" data-sec="bk"><span class="n">B</span>Banco de 21 ejercicios<span class="done"></span></a>
+  <a href="#quiz" data-sec="qz"><span class="n">Q</span>Preguntas directas<span class="done"></span></a>
+  <a href="#abiertas" data-sec="ab"><span class="n">A</span>Preguntas abiertas<span class="done"></span></a>
+  <a href="#simulador" data-sec="sim"><span class="n">S</span>Simulador libre<span class="done"></span></a>
+</nav>
+<main id="main">
+
+
+<section id="inicio" class="hero">
+  <p class="eyebrow">Universidad Mariano Gálvez · Arquitectura de Computadoras II · Parcial II</p>
+  <h1>El 8086,<br>registro por registro.</h1>
+  <p class="lede">Todo el ensamblador del parcial: qué hace cada registro y cómo se usa, cómo se calcula una dirección, las instrucciones que usa el profe y sus patrones (hoja de actividades, labs y la evaluación práctica). Con un simulador paso a paso estilo EMU8086, trazas para llenar como en papel y un banco de 21 ejercicios que se revisan solos.</p>
+
+  <h3>Plan de estudio sugerido</h3>
+  <div class="grid g3 toc-grid">
+    <a class="card" href="#registros"><span class="n">BLOQUE 1 · EL PROCESADOR</span><h4>Qué hay adentro</h4><p>Registros, segmentos, pila, modos de direccionamiento, banderas y números con signo.</p></a>
+    <a class="card" href="#estructura"><span class="n">BLOQUE 2 · EL LENGUAJE</span><h4>Las instrucciones del curso</h4><p>Plantillas, MOV, aritmética, CMP y saltos, LOOP, INT 21h e INT 10h. Y lo que no se usa.</p></a>
+    <a class="card" href="#escenarios"><span class="n">BLOQUE 3 · PATRONES</span><h4>Cómo pregunta el profe</h4><p>Los 14 escenarios de sus documentos y los errores que más cuestan puntos.</p></a>
+    <a class="card" href="#banco"><span class="n">BLOQUE 4 · PRÁCTICA</span><h4>A prueba de tontos</h4><p>Trazas en papel, direcciones físicas, 21 ejercicios con comparador, preguntas y simulador libre.</p></a>
+  </div>
+
+  <div class="key warn"><b>Cómo es el examen <span class="badge ded">deducido de los documentos</span></b>
+    <ul class="small">
+      <li><b>Es en papel:</b> no hay emulador que te avise de errores. Hay que “ser el procesador”: ejecutar a mano y llevar la tabla de registros.</li>
+      <li><b>Casi todo es ensamblador 8086</b> con la sintaxis de EMU8086 que aparece en la hoja de actividades, los labs 2, 4, 5, 6 y 8, el lab de NEG y la evaluación práctica.</li>
+      <li><b>Tipos de pregunta vistos:</b> ① llenar cuadros de registros después de cada instrucción; ② mapa de memoria y little endian; ③ el cuadro hex / decimal con y sin signo / ASCII / octal / binario; ④ dirección física según el modo de direccionamiento, con una tabla de registros tipo hoja de cálculo (RAX, RBX… CS, SS, ES, DS); ⑤ completar un programa por bloques en una plantilla (el clasificador de caracteres).</li>
+      <li>El profe da los <b>nombres de variables y mensajes</b>; lo que cambia de un examen a otro es la lógica y el valor de <code>N</code> (10 + tu dígito de carné).</li>
+    </ul>
+  </div>
+
+  <h3>Cómo usar esta guía</h3>
+  <ol class="steps">
+    <li><b>Lee el bloque 1 con el simulador abierto.</b> Antes de pulsar <b>Paso ▶</b>, di en voz alta qué registro va a cambiar y a qué valor. Activa <b>Ocultar valores</b> para obligarte a predecir: tocas la casilla para comprobar.</li>
+    <li><b>Aprende los patrones (bloque 3).</b> Cada escenario del examen tiene una receta y un enlace al ejercicio que lo practica.</li>
+    <li><b>Haz las trazas en papel</b> (T1–T7) con lápiz: llena la tabla y luego escríbela para revisarla. Si te trabas, pide una pista o abre el paso a paso.</li>
+    <li><b>Banco de ejercicios, del nivel 1 al 5.</b> Escríbelo primero en papel, luego transcríbelo y pulsa <b>Revisar</b>. Está <b>aprobado</b> si tu código se parece al menos un <b>95%</b> a la solución del profe <b>y</b> da la misma pantalla en todas las pruebas del simulador (sin errores lógicos).</li>
+    <li><b>Cierra con las preguntas</b> directas (clic en la opción) y abiertas (escribe tu respuesta y compárala con la modelo). Marca cada sección como repasada.</li>
+  </ol>
+  <p class="small muted">Tienes a mano el <b>lápiz</b> (Anotar) para rayar sobre cualquier sección y la <b>pizarra</b> para hacer las restas en hexadecimal. Todo el progreso se guarda en este navegador.</p>
+</section>
+
+<!-- ======================= HOJA ======================= -->
+<section id="hoja" class="topic">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Para repasar 5 minutos antes</p><h2>Hoja de referencia rápida</h2></div></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">REGISTROS DE 16 BITS</span>
+      <ul class="small">
+        <li><b>AX</b> acumulador (AH | AL): MUL/DIV, AH = función de INT, AL = tecla leída.</li>
+        <li><b>BX</b> base (BH | BL): el único general que va entre corchetes. BH = página y BL = color en INT 10h.</li>
+        <li><b>CX</b> contador (CH | CL): LOOP resta 1 a CX. CX = repeticiones en INT 10h/09h.</li>
+        <li><b>DX</b> datos (DH | DL): DX = dirección de la cadena (09h, 0Ah), DL = carácter (02h), DH/DL = fila/columna.</li>
+        <li><b>SI, DI</b> índices (punteros de arreglos) · <b>BP</b> base de pila · <b>SP</b> tope de pila · <b>IP</b> siguiente instrucción.</li>
+        <li><b>CS</b> código · <b>DS</b> datos · <b>SS</b> pila · <b>ES</b> extra.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">DIRECCIÓN FÍSICA</span>
+      <div class="formula">física = segmento × 10h + desplazamiento</div>
+      <ul class="small">
+        <li>“Al segmento se le agrega un 0”: DS = 3000h, DI = 0001h → <b>30001h</b>.</li>
+        <li>Segmento por defecto: <b>IP → CS</b> · <b>SP y BP → SS</b> · <b>BX, SI, DI y [número] → DS</b>. Se cambia con prefijo: <code>CS:[BX]</code>, <code>ES:[SI]</code>.</li>
+        <li><b>Little endian:</b> una palabra se guarda con el byte bajo primero. AX = 1DCCh → CC en la dirección, 1D en la siguiente.</li>
+        <li>PUSH: SP − 2 y guarda · POP: lee y SP + 2.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">INT 21h (DOS) · función en AH</span>
+      <ul class="small">
+        <li><b>01h</b> lee una tecla con eco → <b>AL</b> (en ASCII).</li>
+        <li><b>02h</b> imprime el carácter de <b>DL</b> (deja AL = DL).</li>
+        <li><b>09h</b> imprime la cadena de <b>DS:DX</b> hasta el <b>$</b> (deja AL = 24h).</li>
+        <li><b>0Ah</b> lee una cadena en el búfer DS:DX: [0] máximo · [1] leídos · [2…] caracteres + 0Dh.</li>
+        <li><b>4Ch</b> termina el programa (<code>MOV AX, 4C00h</code> o <code>MOV AH, 4Ch</code>).</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">INT 10h (BIOS de video)</span>
+      <ul class="small">
+        <li><code>MOV AX, 0003h</code> / <code>INT 10h</code> → limpia la pantalla (modo texto 80×25).</li>
+        <li><b>02h</b> mueve el cursor a fila <b>DH</b>, columna <b>DL</b> (BH = 0).</li>
+        <li><b>03h</b> lee el cursor → DH, DL.</li>
+        <li><b>09h</b> escribe <b>AL</b> con el color <b>BL</b>, <b>CX</b> veces, <b>sin mover</b> el cursor.</li>
+        <li>Color = nibble alto fondo, nibble bajo texto: <code>0Ch</code> = rojo claro sobre negro.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">SALTOS (SIN SIGNO)</span>
+      <ul class="small">
+        <li><code>CMP a, b</code> = a − b sin guardar: solo banderas.</li>
+        <li><b>JE</b> a = b (ZF = 1) · <b>JNE</b> a ≠ b · <b>JB</b> a &lt; b (CF = 1) · <b>JBE</b> a ≤ b · <b>JA</b> a &gt; b · <b>JAE</b> a ≥ b · <b>JMP</b> siempre.</li>
+        <li><b>LOOP</b> etiqueta: CX = CX − 1 y salta si CX ≠ 0.</li>
+        <li>Los condicionales son <b>cortos</b> (±127 bytes): para lejos, <code>JE VOLVER</code> y en VOLVER un <code>JMP</code>.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">MUL · DIV · SHR</span>
+      <ul class="small">
+        <li><b>MUL BL</b>: AX = AL × BL · <b>MUL BX</b>: DX:AX = AX × BX.</li>
+        <li><b>DIV BL</b>: AX ÷ BL → <b>AL = cociente</b>, <b>AH = residuo</b> (pon <code>MOV AH, 0</code> antes).</li>
+        <li><b>DIV BX</b>: DX:AX ÷ BX → AX cociente, DX residuo.</li>
+        <li>No aceptan números: <code>MOV BL, 10</code> / <code>DIV BL</code>. <b>SHR AL, 1</b> = ÷ 2.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">ASCII QUE SE USA</span>
+      <ul class="small">
+        <li><b>'0'–'9'</b> = 30h–39h · <b>'A'–'Z'</b> = 41h–5Ah · <b>'a'–'z'</b> = 61h–7Ah.</li>
+        <li>Espacio 20h · <b>$</b> 24h · CR 0Dh (13) · LF 0Ah (10) · '*' 2Ah · 'S' 53h · 's' 73h.</li>
+        <li>Dígito ↔ número: <b>± 30h</b>. Mayúscula ↔ minúscula: <b>± 20h</b>.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">REGLAS DE MOV</span>
+      <ul class="small">
+        <li>✗ memoria → memoria (usa un registro de puente).</li>
+        <li>✗ número → DS/ES/SS (pasa por AX: <code>MOV AX, @DATA</code> / <code>MOV DS, AX</code>).</li>
+        <li>✗ cambiar CS con MOV · ✗ tamaños distintos (AX ← BL).</li>
+        <li>Números: sufijo <b>h</b> hex, <b>b</b> binario, <b>o</b> octal; si empieza con letra, un 0 delante (<code>0FFh</code>).</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ======================= R1 · REGISTROS ======================= -->
+<section id="registros" class="topic" data-sec="r1">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · El procesador</p><h2>R1 · Los registros</h2></div><button class="mark-btn" data-mark="r1" aria-pressed="false">Marcar como repasado</button></div>
+  <p><b>Idea clave:</b> la memoria es un estante enorme; los registros son las <b>manos</b> del procesador. Para sumar, comparar o imprimir, primero tomas el dato en una mano (registro). Por eso casi todo pasa por AX, BX, CX o DX.</p>
+
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 270" role="img" aria-label="Anatomía de RAX: RAX de 64 bits contiene a EAX de 32, que contiene a AX de 16, formado por AH y AL">
+      <line class="ll" x1="380" y1="20" x2="380" y2="250"/><line class="ll" x1="550" y1="20" x2="550" y2="250"/><line class="ll" x1="635" y1="170" x2="635" y2="250"/>
+      <rect class="nd" x="40" y="34" width="680" height="36" rx="6"/>
+      <rect class="nd-m" x="380" y="86" width="340" height="36" rx="6"/>
+      <rect class="nd-c" x="550" y="138" width="170" height="36" rx="6"/>
+      <rect class="nd-v" x="550" y="190" width="85" height="36" rx="6"/>
+      <rect class="nd-v" x="635" y="190" width="85" height="36" rx="6"/>
+      <text class="b" x="52" y="57">RAX</text><text class="sm mut" x="92" y="57">64 bits (x64)</text><text class="mono c" x="560" y="57">0000 0000 0000 1000h</text>
+      <text class="b" x="392" y="109">EAX</text><text class="sm mut" x="430" y="109">32 bits</text><text class="mono e" x="710" y="109">0000 1000h</text>
+      <text class="b" x="560" y="161">AX</text><text class="sm mut" x="584" y="161">16</text><text class="mono e" x="710" y="161">1000h</text>
+      <text class="b c" x="592" y="213">AH 10h</text><text class="b c" x="677" y="213">AL 00h</text>
+      <text class="xs mut c" x="40" y="22">bit 63</text><text class="xs mut c" x="380" y="16">bit 31</text><text class="xs mut c" x="550" y="16">bit 15</text><text class="xs mut e" x="720" y="22">bit 0</text>
+      <text class="sm" x="40" y="150">El <tspan class="b">8086</tspan> solo tiene la parte de 16 bits:</text>
+      <text class="sm" x="40" y="170">AX, y sus mitades AH (alta) y AL (baja).</text>
+      <text class="sm mut" x="40" y="200">EAX (386) y RAX (x64) son extensiones</text>
+      <text class="sm mut" x="40" y="220">posteriores del mismo registro.</text>
+      <text class="xs mut c" x="592" y="245">bits 15–8</text><text class="xs mut c" x="677" y="245">bits 7–0</text>
+    </svg>
+    <figcaption><b>Un registro dentro de otro.</b> Con la tabla del profe (RAX = 0000 0000 0000 1000): AX = 1000h, AH = 10h, AL = 00h. Cambiar AL no toca AH, y viceversa.</figcaption>
+  </figure>
+
+  <h3>Los 14 registros del 8086</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Registro</th><th>Nombre</th><th>Para qué sirve</th><th>Lo usan sin que lo escribas</th><th>En los documentos</th></tr></thead>
+    <tbody>
+      <tr><td><b>AX</b> (AH, AL)</td><td>Acumulador</td><td>Operaciones y resultados</td><td>MUL/DIV; INT 21h lee AH (función) y devuelve en AL</td><td><code>MOV AH, 01h / INT 21h</code> → tecla en AL</td></tr>
+      <tr><td><b>BX</b> (BH, BL)</td><td>Base</td><td>Puntero: el único general que va entre <code>[ ]</code></td><td>INT 10h: BH = página, BL = color</td><td><code>MOV BUF_NUMS[BX], AL</code></td></tr>
+      <tr><td><b>CX</b> (CH, CL)</td><td>Contador</td><td>Cuántas vueltas</td><td>LOOP; INT 10h/09h (repeticiones); SHR con CL</td><td><code>MOV CX, N</code> … <code>LOOP CAPTURA</code></td></tr>
+      <tr><td><b>DX</b> (DH, DL)</td><td>Datos</td><td>Direcciones de cadenas y E/S</td><td>INT 21h/09h y 0Ah (DX), 02h (DL); MUL/DIV de 16 bits; cursor (DH, DL)</td><td><code>LEA DX, MSJ</code> · <code>MOV DL, BL</code></td></tr>
+      <tr><td><b>SI</b></td><td>Índice origen</td><td>Recorrer arreglos (leer)</td><td>—</td><td><code>LEA SI, BUF_MAYUS</code> / <code>MOV DL, [SI]</code></td></tr>
+      <tr><td><b>DI</b></td><td>Índice destino</td><td>Recorrer arreglos (escribir)</td><td>Instrucciones de cadena (con ES)</td><td><code>MOV DI, OFFSET ARREGLO1</code></td></tr>
+      <tr><td><b>BP</b></td><td>Base de pila</td><td>Leer datos dentro de la pila</td><td><code>[BP]</code> usa SS por defecto</td><td>Aparece en los cuadros (0000)</td></tr>
+      <tr><td><b>SP</b></td><td>Puntero de pila</td><td>Tope de la pila</td><td>PUSH / POP (no se usa a mano)</td><td>“SS:SP = A000:FFF4”</td></tr>
+      <tr><td><b>IP</b></td><td>Puntero de instrucción</td><td>Dirección de la <b>siguiente</b> instrucción</td><td>Lo cambian los saltos; no se escribe con MOV</td><td>“La línea amarilla es a la que apunta IP”</td></tr>
+      <tr><td><b>CS</b></td><td>Segmento de código</td><td>Dónde está el programa</td><td>CS:IP</td><td>EMU8086: 0700h</td></tr>
+      <tr><td><b>DS</b></td><td>Segmento de datos</td><td>Dónde están las variables</td><td>[BX], [SI], [DI], variables</td><td><code>MOV AX, @DATA / MOV DS, AX</code></td></tr>
+      <tr><td><b>SS</b></td><td>Segmento de pila</td><td>Dónde está la pila</td><td>SS:SP, [BP]</td><td>“SS deberá contener A000”</td></tr>
+      <tr><td><b>ES</b></td><td>Segmento extra</td><td>Un segundo segmento de datos</td><td>Con prefijo <code>ES:</code></td><td><code>MOV ES:[SI], AX</code></td></tr>
+      <tr><td><b>FLAGS</b></td><td>Banderas</td><td>Resultado de la última operación</td><td>CMP las prende; los saltos las leen</td><td>“¿Se activó la bandera de signo?”</td></tr>
+    </tbody></table></div>
+
+  <h3>La tabla del profe (formato hoja de cálculo)</h3>
+  <p>En el examen suele aparecer el contenido de los registros así, con nombres de 64 bits. Se lee de izquierda a derecha en <b>cuatro grupos de 16 bits</b>; para el 8086 solo importa el último grupo.</p>
+  <div data-profe='{"regs":{"RAX":"1000","RBX":"0020","RCX":"0004","RDX":"0002","RSI":"0100","RDI":"0200","R8":"0050","RIP":"4000","CS":"0700","SS":"3000","ES":"5000","DS":"8000"},"left":["RAX","RBX","RCX","RDX","RSI","RDI","R8","RIP"]}'></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">CÓMO LEERLA</span>
+      <ul class="small">
+        <li>RAX = 0000 0000 0000 <b>1000</b> → EAX = 0000 1000h → <b>AX = 1000h</b> → AH = 10h, AL = 00h.</li>
+        <li>RCX = …0004 → CX = 0004h → CH = 00h, <b>CL = 04h</b>.</li>
+        <li>RSI = …0100 → SI = 0100h; RDI = …0200 → DI = 0200h.</li>
+        <li><b>R8</b> = …0050: registro nuevo de x64 (R8–R15); sus partes son R8D (32), R8W (16) y R8B (8) = 50h. <b>No existe en el 8086</b>.</li>
+        <li><b>RIP</b> = …4000 → IP = 4000h: la siguiente instrucción está en CS:IP = 0700:4000 → <b>0B000h</b>.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">¿Y BP, SP?</span>
+      <ul class="small">
+        <li>Si la tabla no los muestra, el profe no los usa en esa pregunta (o valen 0).</li>
+        <li>Los segmentos van a la derecha: <b>CS 0700, SS 3000, ES 5000, DS 8000</b>. Con ellos se calculan las direcciones físicas (<a href="#direccionamiento">R3</a>).</li>
+        <li>En EMU8086, CS = 0700h es el segmento donde se carga el programa.</li>
+      </ul></div>
+  </div>
+
+  <h3>Pruébalo: mitades altas y bajas</h3>
+  <p class="small">Predice antes de cada paso. Fíjate en la última: <code>INC DL</code> con DL = FFh vuelve a 00h y <b>DH no se entera</b>.</p>
+  <script type="text/x-asm" id="demo-regs">
+MOV AX, 1234h
+MOV BL, AH
+MOV BH, AL
+MOV CX, BX
+ADD CL, 1
+MOV DX, 0FFFFh
+INC DL</script>
+  <div data-emu="demo-regs" data-regs="AX=0,BX=0,CX=0,DX=0,DS=0700"></div>
+
+  <h3>Comprueba</h3>
+  <details class="qa"><summary><span class="qn">R1.1</span>Si AX = 3516h, ¿cuánto valen AH y AL?</summary><div class="ans"><p><b>AH = 35h, AL = 16h.</b> AH son los dos primeros dígitos hex; AL los dos últimos.</p></div></details>
+  <details class="qa"><summary><span class="qn">R1.2</span>¿Qué registros pueden ir entre corchetes en el 8086?</summary><div class="ans"><p><b>BX, BP, SI y DI</b> (uno de base y uno de índice como máximo: <code>[BX+SI]</code> sí, <code>[BX+BP]</code> no). <code>[CX]</code> o <code>[AX]</code> no existen.</p></div></details>
+  <details class="qa"><summary><span class="qn">R1.3</span>¿Por qué IP no aparece en ningún MOV de los programas?</summary><div class="ans"><p>Porque IP no se puede escribir directamente: cambia solo, al avanzar a la siguiente instrucción o con un salto (JMP, JE, LOOP…).</p></div></details>
+</section>
+
+<!-- ======================= R2 · MEMORIA ======================= -->
+<section id="memoria" class="topic" data-sec="r2">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · El procesador</p><h2>R2 · Segmentos, memoria y pila</h2></div><button class="mark-btn" data-mark="r2" aria-pressed="false">Marcar como repasado</button></div>
+  <p>El 8086 tiene registros de <b>16 bits</b> (máximo FFFFh = 64 KB) pero puede direccionar <b>1 MB</b> (20 bits, 00000h–FFFFFh). La solución: dividir la memoria en <b>segmentos</b> de 64 KB. Una dirección se escribe <b>segmento:desplazamiento</b> y la dirección real (física) es:</p>
+  <p><span class="formula">física = segmento × 10h + desplazamiento</span></p>
+  <p>Multiplicar por 10h en hexadecimal es <b>agregar un 0 a la derecha</b> (como ×10 en decimal). Así lo dice la hoja de actividades: “la dirección inicial del segmento de datos con el cero agregado + el desplazamiento indicado por DI”.</p>
+
+  <div class="grid g2x">
+    <div class="card"><h4 style="margin-top:0">DS:DI = 3000:0001</h4>
+      <table class="suma"><tbody><tr><td class="op"></td><td class="mono">30000</td><td class="muted">DS × 10h</td></tr><tr><td class="op">+</td><td class="mono">00001</td><td class="muted">DI</td></tr><tr class="tot"><td class="op">=</td><td class="mono">30001</td><td><b>física</b></td></tr></tbody></table></div>
+    <div class="card"><h4 style="margin-top:0">ES:SI = 8000:000A</h4>
+      <table class="suma"><tbody><tr><td class="op"></td><td class="mono">80000</td><td class="muted">ES × 10h</td></tr><tr><td class="op">+</td><td class="mono">0000A</td><td class="muted">SI</td></tr><tr class="tot"><td class="op">=</td><td class="mono">8000A</td><td><b>física</b></td></tr></tbody></table></div>
+  </div>
+
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 190" role="img" aria-label="El megabyte de memoria con las ventanas de 64 KB de CS, DS, ES y SS según la tabla del profe">
+      <rect class="nd" x="40" y="80" width="680" height="40" rx="4"/>
+      <rect class="nd-x" x="58.6" y="80" width="42.5" height="40"/>
+      <rect class="nd-m" x="167.5" y="80" width="42.5" height="40"/>
+      <rect class="nd-c" x="380" y="80" width="42.5" height="40"/>
+      <rect class="nd-v" x="465" y="80" width="42.5" height="40"/>
+      <text class="xs mono" x="40" y="138">00000h</text><text class="xs mono e" x="720" y="138">FFFFFh</text>
+      <text class="sm b c" x="80" y="40">CS 0700h</text><text class="xs mono mut c" x="80" y="56">07000h</text>
+      <text class="sm b c" x="189" y="40">DS 3000h</text>
+      <text class="sm b c" x="401" y="40">ES 8000h</text>
+      <line class="ar" x1="80" y1="62" x2="80" y2="78"/><line class="ar" x1="189" y1="62" x2="189" y2="78"/><line class="ar" x1="401" y1="62" x2="401" y2="78"/><line class="ar" x1="486" y1="62" x2="486" y2="78"/>
+      <text class="sm b c" x="486" y="40">SS A000h</text><text class="xs mono mut c" x="486" y="56">A0000h</text>
+      <text class="xs mono mut c" x="189" y="56">30000h</text><text class="xs mono mut c" x="401" y="56">80000h</text>
+      <text class="sm mut c" x="380" y="168">Cada segmento es una ventana de 64 KB que empieza en segmento × 10h. Un mismo byte puede tener varios nombres: 0700:4000 = 0B00:0000 = 0B000h.</text>
+    </svg>
+    <figcaption><b>1 MB en ventanas de 64 KB</b> (valores de la hoja de actividades: CS 0700h, DS 3000h, ES 8000h, SS A000h). Las ventanas pueden encimarse.</figcaption>
+  </figure>
+
+  <h3>¿Qué segmento se usa?</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Si la dirección usa…</th><th>Segmento por defecto</th><th>Ejemplo</th><th>Física (tabla del profe: DS 8000, SS 3000)</th></tr></thead>
+    <tbody>
+      <tr><td>IP (la siguiente instrucción)</td><td><b>CS</b></td><td>CS:IP = 0700:4000</td><td>0B000h</td></tr>
+      <tr><td>SP (PUSH, POP)</td><td><b>SS</b></td><td>SS:SP</td><td>—</td></tr>
+      <tr><td>BP</td><td><b>SS</b></td><td><code>[BP+SI]</code></td><td>30000h + BP + SI</td></tr>
+      <tr><td>BX, SI, DI o un número</td><td><b>DS</b></td><td><code>[BX+4]</code></td><td>80000h + 0020h + 4 = 80024h</td></tr>
+      <tr><td>Una variable (<code>CANT_NUMS</code>)</td><td><b>DS</b></td><td><code>INC CANT_NUMS</code></td><td>DS × 10h + OFFSET CANT_NUMS</td></tr>
+      <tr><td>Prefijo <code>CS:</code> <code>ES:</code> <code>SS:</code> <code>DS:</code></td><td><b>el del prefijo</b></td><td><code>MOV AL, ES:[DI]</code></td><td>50000h + 0200h = 50200h</td></tr>
+    </tbody></table></div>
+
+  <h3>El mapa de memoria de EMU8086</h3>
+  <p>Botón <b>aux → memory</b>, escribes <code>3000:0000</code> y <b>update</b>. Cada fila son <b>16 bytes</b>: la dirección de la fila, los bytes en hex (el guion separa el 8.º del 9.º) y a la derecha el mismo contenido como caracteres.</p>
+  <div class="tbl-wrap"><table class="mt big"><tbody>
+    <tr><th>3000:0000</th><td>4B</td><td>A8</td><td>6E</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td class="mid">00</td><td>00</td><td>26</td><td>DE</td><td>00</td><td>00</td><td>00</td><td>00</td><td class="asc">K¿n.......&amp;▐....</td></tr>
+    <tr><th>3000:0010</th><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td class="mid">00</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td>00</td><td class="asc">................</td></tr>
+  </tbody></table></div>
+  <p class="small">La captura de la hoja: en <b>30000h</b> hay 4Bh (75 = NUMERO1), en 30001h A8h, en 30002h 6Eh, y en <b>3000Ah–3000Bh</b> la palabra DE26h guardada “al revés”: 26 y luego DE.</p>
+
+  <h3>Little endian: el byte chico va primero</h3>
+  <figure>
+    <svg class="dg" viewBox="0 0 700 200" role="img" aria-label="MOV ES:[SI], AX guarda AL en 8000A y AH en 8000B">
+      <defs><marker id="le-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="ah"/></marker></defs>
+      <text class="sm b" x="40" y="30">MOV ES:[SI], AX    con AX = 1DCCh y ES:SI = 8000:000A</text>
+      <rect class="nd-v" x="40" y="70" width="100" height="46" rx="6"/><rect class="nd-v" x="140" y="70" width="100" height="46" rx="6"/>
+      <text class="b c" x="90" y="92">AH</text><text class="mono c" x="90" y="108">1Dh</text><text class="b c" x="190" y="92">AL</text><text class="mono c" x="190" y="108">CCh</text>
+      <rect class="nd" x="470" y="60" width="120" height="36" rx="4"/><rect class="nd" x="470" y="96" width="120" height="36" rx="4"/><rect class="nd" x="470" y="132" width="120" height="36" rx="4"/>
+      <text class="xs mono e" x="462" y="83">8000A</text><text class="xs mono e" x="462" y="119">8000B</text><text class="xs mono e" x="462" y="155">8000C</text>
+      <text class="mono c b" x="530" y="83">CC</text><text class="mono c b" x="530" y="119">1D</text><text class="mono c mut" x="530" y="155">…</text>
+      <path class="ar acc" d="M240,93 C340,93 380,78 468,78" marker-end="url(#le-a)"/>
+      <path class="ar" d="M90,116 C90,170 380,114 468,114" marker-end="url(#le-a)"/>
+      <text class="xs mut lbl" x="300" y="70">byte bajo → dirección indicada</text>
+      <text class="xs mut lbl" x="250" y="160">byte alto → la siguiente</text>
+    </svg>
+    <figcaption><b>Por eso en el mapa “se lee al revés”:</b> la palabra 1DCCh aparece como <code>CC 1D</code>.</figcaption>
+  </figure>
+
+  <h3>La pila</h3>
+  <p>Es una zona de memoria en <b>SS</b> que crece <b>hacia abajo</b> (hacia direcciones menores). <b>SP</b> apunta al último dato guardado. Funciona como una pila de platos: el último que entra es el primero que sale (LIFO).</p>
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 260" role="img" aria-label="Pila antes y después de PUSH AX y POP CX">
+      <text class="sm b c" x="135" y="24">Antes · SP = FFF4h</text><text class="sm b c" x="385" y="24">PUSH AX (AX = 3516h)</text><text class="sm b c" x="635" y="24">POP CX</text>
+      <g class="mono">
+        <rect class="nd" x="80" y="40" width="110" height="32"/><rect class="nd" x="80" y="72" width="110" height="32"/><rect class="nd" x="80" y="104" width="110" height="32"/><rect class="nd" x="80" y="136" width="110" height="32"/><rect class="nd-c" x="80" y="168" width="110" height="32"/><rect class="nd-c" x="80" y="200" width="110" height="32"/>
+        <rect class="nd" x="330" y="40" width="110" height="32"/><rect class="nd" x="330" y="72" width="110" height="32"/><rect class="nd-v" x="330" y="104" width="110" height="32"/><rect class="nd-v" x="330" y="136" width="110" height="32"/><rect class="nd-c" x="330" y="168" width="110" height="32"/><rect class="nd-c" x="330" y="200" width="110" height="32"/>
+        <rect class="nd" x="580" y="40" width="110" height="32"/><rect class="nd" x="580" y="72" width="110" height="32"/><rect class="nd" x="580" y="104" width="110" height="32"/><rect class="nd" x="580" y="136" width="110" height="32"/><rect class="nd-c" x="580" y="168" width="110" height="32"/><rect class="nd-c" x="580" y="200" width="110" height="32"/>
+      </g>
+      <text class="xs mono e" x="74" y="60">FFF0</text><text class="xs mono e" x="74" y="92">FFF1</text><text class="xs mono e" x="74" y="124">FFF2</text><text class="xs mono e" x="74" y="156">FFF3</text><text class="xs mono e" x="74" y="188">FFF4</text><text class="xs mono e" x="74" y="220">FFF5</text>
+      <text class="xs mono e" x="324" y="60">FFF0</text><text class="xs mono e" x="324" y="92">FFF1</text><text class="xs mono e" x="324" y="124">FFF2</text><text class="xs mono e" x="324" y="156">FFF3</text><text class="xs mono e" x="324" y="188">FFF4</text><text class="xs mono e" x="324" y="220">FFF5</text>
+      <text class="xs mono e" x="574" y="60">FFF0</text><text class="xs mono e" x="574" y="92">FFF1</text><text class="xs mono e" x="574" y="124">FFF2</text><text class="xs mono e" x="574" y="156">FFF3</text><text class="xs mono e" x="574" y="188">FFF4</text><text class="xs mono e" x="574" y="220">FFF5</text>
+      <text class="mono c mut" x="135" y="192">00</text><text class="mono c mut" x="135" y="224">55</text>
+      <text class="mono c b" x="385" y="128">16</text><text class="mono c b" x="385" y="160">35</text><text class="mono c mut" x="385" y="192">00</text><text class="mono c mut" x="385" y="224">55</text>
+      <text class="mono c mut" x="635" y="128">16</text><text class="mono c mut" x="635" y="160">35</text><text class="mono c mut" x="635" y="192">00</text><text class="mono c mut" x="635" y="224">55</text>
+      <text class="sm b" x="196" y="189">← SP</text><text class="sm b" x="446" y="125">← SP</text><text class="sm b" x="696" y="189">← SP</text>
+      <text class="xs mut c" x="385" y="252">SP = SP − 2 y guarda (byte bajo primero)</text>
+      <text class="xs mut c" x="635" y="252">CX = 3516h y SP = SP + 2</text>
+    </svg>
+    <figcaption><b>POP no borra:</b> los bytes 16 y 35 siguen en memoria después del POP; simplemente quedan “fuera” de la pila (arriba de SP).</figcaption>
+  </figure>
+
+  <h3>Pruébalo: la hoja de actividades, parte 2</h3>
+  <p class="small">La memoria salta sola a donde se escribe. Compara con lo que pide la hoja: 3000:0001 = 55h (“U”), SS:SP = A000:FFF4, 8000A = CCh y 8000B = 1Dh.</p>
+  <script type="text/x-asm" id="demo-act">
+MOV CX, AX
+ADD CH, 25h
+MOV DI, 1
+MOV [DI], CH
+INC DI
+PUSH CX
+MOV DX, 1234H
+MOV SI, 12o
+SUB AX, DX
+MOV ES:[SI], AX</script>
+  <div data-emu="demo-act" data-regs="AX=3000,DS=3000,ES=8000,SS=A000,SP=FFF6" data-watch="3000:0000"></div>
+
+  <h3>¿Dónde están los datos? (hoja de actividades, parte 3)</h3>
+  <div class="key"><b>En un programa .COM (org 100h) todo vive en un solo segmento.</b>
+    <p class="small">Si las variables se declaran dentro del código (como NUMERO1 y ARREGLO1 en la hoja), están en el <b>segmento de código</b>: <code>MOV BX, OFFSET NUMERO1</code> y se buscan en <b>CS:BX</b>. Si antes cambiaste DS a 3000h, en DS:BX no están. Por eso la hoja las copia con prefijo: <code>MOV AH, CS:[BX]</code> / <code>MOV [00H], AH</code> (esta segunda escritura usa DS). <b>OFFSET</b> da el desplazamiento de una variable dentro de su segmento.</p></div>
+
+  <h3>Comprueba</h3>
+  <details class="qa"><summary><span class="qn">R2.1</span>SS = A000h y SP = FFF4h. ¿Dirección física del tope de la pila?</summary><div class="ans"><p>A0000h + FFF4h = <b>AFFF4h</b>.</p></div></details>
+  <details class="qa"><summary><span class="qn">R2.2</span>Después de <code>MOV [SI], AX</code> con AX = 1C34h y DS:SI = 3000:000A, ¿qué hay en 3000Ah y 3000Bh?</summary><div class="ans"><p><b>3000Ah = 34h</b> (AL) y <b>3000Bh = 1Ch</b> (AH).</p></div></details>
+  <details class="qa"><summary><span class="qn">R2.3</span>¿Cuánto vale SP después de tres PUSH si empezó en FFFEh?</summary><div class="ans"><p>FFFEh − 6 = <b>FFF8h</b> (cada PUSH resta 2).</p></div></details>
+</section>
+
+<!-- ======================= R3 · DIRECCIONAMIENTO ======================= -->
+<section id="direccionamiento" class="topic" data-sec="r3">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · El procesador</p><h2>R3 · Modos de direccionamiento</h2></div><button class="mark-btn" data-mark="r3" aria-pressed="false">Marcar como repasado</button></div>
+  <p>El <b>modo de direccionamiento</b> es la forma en que la instrucción dice dónde está el dato: en un registro, dentro de la misma instrucción o en memoria (y cómo se calcula esa dirección). Esta es la tabla del libro que usa el profe (Brey), con DS = 1000H, BX = 0300H, SI = 0200H, ARRAY = 1000H, y a la derecha lo mismo con la tabla de registros del profe (DS = 8000H, BX = 0020H, SI = 0100H).</p>
+  <div class="tbl-wrap"><table class="modos">
+    <thead><tr><th>Tipo</th><th>Instrucción</th><th>Origen</th><th>Cálculo de la dirección</th><th>Destino</th><th>Con la tabla del profe</th></tr></thead>
+    <tbody>
+      <tr><td><b>Registro</b></td><td><code>MOV AX, BX</code></td><td><span class="bx">Registro BX</span></td><td class="muted">— no hay memoria</td><td><span class="bx">Registro AX</span></td><td class="mono">AX ← 0020h</td></tr>
+      <tr><td><b>Inmediato</b></td><td><code>MOV CH, 3AH</code></td><td><span class="bx">Dato 3AH</span></td><td class="muted">— viene en la instrucción</td><td><span class="bx">Registro CH</span></td><td class="mono">CH ← 3Ah</td></tr>
+      <tr><td><b>Directo</b></td><td><code>MOV [1234H], AX</code></td><td><span class="bx">Registro AX</span></td><td>DS × 10H + DISP<br><span class="mono small">10000H + 1234H</span></td><td><span class="bx">Memoria 11234H</span></td><td class="mono">80000 + 1234 = <b>81234h</b></td></tr>
+      <tr><td><b>Indirecto por registro</b></td><td><code>MOV [BX], CL</code></td><td><span class="bx">Registro CL</span></td><td>DS × 10H + BX<br><span class="mono small">10000H + 0300H</span></td><td><span class="bx">Memoria 10300H</span></td><td class="mono">80000 + 0020 = <b>80020h</b></td></tr>
+      <tr><td><b>Base más índice</b></td><td><code>MOV [BX+SI], BP</code></td><td><span class="bx">Registro BP</span></td><td>DS × 10H + BX + SI<br><span class="mono small">10000H + 0300H + 0200H</span></td><td><span class="bx">Memoria 10500H</span></td><td class="mono">80000 + 0020 + 0100 = <b>80120h</b></td></tr>
+      <tr><td><b>Relativo a registro</b></td><td><code>MOV CL, [BX+4]</code></td><td><span class="bx">Memoria 10304H</span></td><td>DS × 10H + BX + 4<br><span class="mono small">10000H + 0300H + 4</span></td><td><span class="bx">Registro CL</span></td><td class="mono">80000 + 0020 + 4 = <b>80024h</b></td></tr>
+      <tr><td><b>Base relativa más índice</b></td><td><code>MOV ARRAY[BX+SI], DX</code></td><td><span class="bx">Registro DX</span></td><td>DS × 10H + ARRAY + BX + SI<br><span class="mono small">10000H + 1000H + 0300H + 0200H</span></td><td><span class="bx">Memoria 11500H</span></td><td class="mono">80000 + 1000 + 0020 + 0100 = <b>81120h</b></td></tr>
+      <tr><td><b>Índice escalado</b> <span class="badge">386+</span></td><td><code>MOV [EBX+2×ESI], AX</code></td><td><span class="bx">Registro AX</span></td><td>DS × 10H + EBX + 2 × ESI<br><span class="mono small">10000H + 00000300H + 00000400H</span></td><td><span class="bx">Memoria 10700H</span></td><td class="mono">80000 + 0020 + 0200 = <b>80220h</b></td></tr>
+    </tbody></table></div>
+  <p class="small muted">En la figura del libro el origen de “base más índice” dice SP; la instrucción dice BP (es una errata de la figura). El índice escalado usa registros de 32 bits: no existe en el 8086, pero sí aparece en la tabla.</p>
+
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">CÓMO RECONOCER EL MODO</span>
+      <ol class="small">
+        <li>¿Algún operando tiene <code>[ ]</code> o una variable? <b>No</b> → si el origen es un número: <b>inmediato</b>; si son registros: <b>registro</b>.</li>
+        <li>Dentro de la dirección, cuenta <b>registros</b> y <b>desplazamiento</b> (número o nombre de arreglo):</li>
+        <li>solo número → <b>directo</b> · 1 registro → <b>indirecto por registro</b> · 2 registros → <b>base más índice</b></li>
+        <li>1 registro + desplazamiento → <b>relativo a registro</b> · 2 registros + desplazamiento → <b>base relativa más índice</b></li>
+        <li>hay un <b>× 2, × 4 u × 8</b> → <b>índice escalado</b>.</li>
+      </ol></div>
+    <div class="card tile"><span class="tag">RECETA PARA LA FÍSICA</span>
+      <ol class="small">
+        <li>Elige el segmento: <b>BP → SS</b>, prefijo → el del prefijo, lo demás → <b>DS</b>.</li>
+        <li>Agrégale un 0 (× 10h).</li>
+        <li>Suma todos los términos de adentro de los corchetes (registros, número, ARRAY; el escalado se multiplica antes).</li>
+        <li>Escribe el resultado con 5 dígitos hex.</li>
+      </ol></div>
+  </div>
+
+  <h3>Calculadora con tu propia tabla</h3>
+  <div class="lab" id="dirApp">
+    <p class="small">Edita los registros como vengan en el examen (los 16 bits bajos) y escribe cualquier instrucción. También acepta <code>CS:IP</code>.</p>
+    <div id="dirTabla"></div>
+    <div class="row">
+      <div class="field" style="flex:2"><label for="dirIn">Instrucción</label><input id="dirIn" value="MOV [BX+SI], DX" spellcheck="false" autocomplete="off"></div>
+      <div class="field"><label for="dirArr">ARRAY (si se usa)</label><input id="dirArr" value="1000H" spellcheck="false"></div>
+      <div class="field"><label for="dirBp">BP</label><input id="dirBp" value="0000" spellcheck="false"></div>
+      <button type="button" class="btn" id="dirGo">Calcular</button>
+    </div>
+    <div class="chips">
+      <button type="button" class="chip" data-dir="MOV [1234H], AX">Directo</button>
+      <button type="button" class="chip" data-dir="MOV [BX], CL">Indirecto</button>
+      <button type="button" class="chip" data-dir="MOV [BX+SI], BP">Base + índice</button>
+      <button type="button" class="chip" data-dir="MOV CL, [BX+4]">Relativo</button>
+      <button type="button" class="chip" data-dir="MOV ARRAY[BX+SI], DX">Base relativa + índice</button>
+      <button type="button" class="chip" data-dir="MOV [EBX+2*ESI], AX">Escalado</button>
+      <button type="button" class="chip" data-dir="MOV AL, ES:[DI]">Con ES:</button>
+      <button type="button" class="chip" data-dir="MOV DX, [BP+DI]">Con BP (SS)</button>
+      <button type="button" class="chip" data-dir="CS:IP">CS:IP</button>
+    </div>
+    <div class="out" id="dirOut"></div>
+  </div>
+  <p class="small">Practica con 15 casos en <a href="#dir-ej">Direcciones físicas</a>.</p>
+</section>
+
+<!-- ======================= R4 · BANDERAS ======================= -->
+<section id="banderas" class="topic" data-sec="r4">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · El procesador</p><h2>R4 · Banderas (FLAGS)</h2></div><button class="mark-btn" data-mark="r4" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Cada bandera es <b>un bit</b> que se prende (1) o se apaga (0) según el resultado de la última operación aritmética. Los saltos condicionales las leen para decidir. En EMU8086 se ven con el botón <b>flags</b>.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Bandera</th><th>Bit</th><th>Se prende (= 1) cuando…</th><th>Ejemplo</th><th>La usa</th></tr></thead>
+    <tbody>
+      <tr><td><b>CF</b> acarreo</td><td class="mono">0</td><td>La operación <b>sin signo</b> se pasó de FFh/FFFFh (suma) o pidió prestado (resta: a &lt; b)</td><td>FFh + 1 · CMP 30h, 39h</td><td>JB, JAE, JBE, JA</td></tr>
+      <tr><td><b>PF</b> paridad</td><td class="mono">2</td><td>El byte bajo del resultado tiene una cantidad <b>par</b> de unos</td><td>03h (0000 0011)</td><td>—</td></tr>
+      <tr><td><b>AF</b> auxiliar</td><td class="mono">4</td><td>Hubo acarreo del bit 3 al 4 (entre nibbles)</td><td>0Fh + 1</td><td>—</td></tr>
+      <tr><td><b>ZF</b> cero</td><td class="mono">6</td><td>El resultado es <b>0</b> (en CMP: son iguales)</td><td>CMP AL, AL</td><td>JE, JNE, JBE, JA</td></tr>
+      <tr><td><b>SF</b> signo</td><td class="mono">7</td><td>El bit más alto del resultado es 1 (negativo con signo)</td><td>NEG 26h = DAh</td><td>JL, JG…</td></tr>
+      <tr><td><b>TF</b> trampa</td><td class="mono">8</td><td>Ejecución paso a paso (depuración)</td><td>—</td><td>—</td></tr>
+      <tr><td><b>IF</b> interrupciones</td><td class="mono">9</td><td>Interrupciones habilitadas (normalmente 1)</td><td>—</td><td>—</td></tr>
+      <tr><td><b>DF</b> dirección</td><td class="mono">10</td><td>Instrucciones de cadena recorren hacia atrás</td><td>—</td><td>—</td></tr>
+      <tr><td><b>OF</b> desbordamiento</td><td class="mono">11</td><td>La operación <b>con signo</b> se salió de rango (−128…127)</td><td>7Fh + 1 = 80h</td><td>JL, JG, JO</td></tr>
+    </tbody></table></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">QUÉ INSTRUCCIONES LAS CAMBIAN</span>
+      <ul class="small">
+        <li><b>ADD, SUB, CMP, NEG</b>: todas (CF, ZF, SF, OF, PF, AF).</li>
+        <li><b>INC, DEC</b>: todas <b>menos CF</b>.</li>
+        <li><b>MUL</b>: CF = OF = 1 si la parte alta (AH o DX) quedó ≠ 0; las demás quedan indefinidas.</li>
+        <li><b>SHR</b>: CF = el bit que salió.</li>
+        <li><b>MOV, LEA, PUSH, POP, LOOP, JMP, Jxx, INT 21h</b>: <b>no</b> las tocan.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">CF vs OF: LA TRAMPA</span>
+      <ul class="small">
+        <li><b>7Fh + 1 = 80h</b>: sin signo 127 + 1 = 128, cabe → CF = 0. Con signo +127 + 1 = −128 → <b>OF = 1</b>, SF = 1.</li>
+        <li><b>FFh + 1 = 00h</b>: sin signo 255 + 1 = 256, no cabe → <b>CF = 1</b>, ZF = 1. Con signo −1 + 1 = 0 → OF = 0.</li>
+        <li>CF es para números <b>sin signo</b>; OF para números <b>con signo</b>.</li>
+      </ul></div>
+  </div>
+  <h3>Pruébalo</h3>
+  <script type="text/x-asm" id="demo-flags">
+MOV AL, 7Fh
+ADD AL, 1
+MOV BL, 0FFh
+ADD BL, 1
+MOV CL, 30h
+CMP CL, '9'
+MOV BL, 26h
+NEG BL</script>
+  <div data-emu="demo-flags" data-regs="AX=0,BX=0,CX=0,DX=0"></div>
+  <details class="qa"><summary><span class="qn">R4.1</span>Después de <code>NEG BL</code> con BL = 26h, ¿se activó la bandera de signo? (pregunta de la hoja)</summary><div class="ans"><p><b>Sí.</b> DAh = 1101 1010: el bit 7 es 1 → SF = 1. Además CF = 1 (NEG de algo distinto de 0).</p></div></details>
+  <details class="qa"><summary><span class="qn">R4.2</span><code>CMP AL, BL</code> con AL = BL. ¿Qué bandera se prende y qué salto se toma: JE o JB?</summary><div class="ans"><p><b>ZF = 1</b> (la resta da 0) y <b>JE</b> salta. JB no (CF = 0).</p></div></details>
+</section>
+
+<!-- ======================= R5 · NÚMEROS ======================= -->
+<section id="numeros" class="topic" data-sec="r5">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · El procesador</p><h2>R5 · Números y complemento a 2</h2></div><button class="mark-btn" data-mark="r5" aria-pressed="false">Marcar como repasado</button></div>
+  <p>La hoja de actividades pide un cuadro con <b>seis formatos</b> del mismo valor: hexadecimal, decimal con signo, decimal sin signo, carácter ASCII, octal y binario. Estas son las recetas para hacerlo a mano.</p>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">HEX ↔ DECIMAL</span>
+      <ul class="small">
+        <li><b>Hex → dec:</b> cada dígito por su potencia de 16. 26h = 2×16 + 6 = <b>38</b>. 1DCCh = 1×4096 + 13×256 + 12×16 + 12 = <b>7628</b>.</li>
+        <li><b>Dec → hex:</b> divide entre 16 y lee los residuos de abajo hacia arriba. 7628 ÷ 16 = 476 r 12 (C) · 476 ÷ 16 = 29 r 12 (C) · 29 ÷ 16 = 1 r 13 (D) · 1 → <b>1DCCh</b>.</li>
+        <li>Potencias: 16² = 256 · 16³ = 4096 · 16⁴ = 65536.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">BINARIO Y OCTAL</span>
+      <ul class="small">
+        <li><b>Hex → binario:</b> cada dígito hex son 4 bits. 26h = 0010 0110.</li>
+        <li><b>Binario → octal:</b> grupos de 3 desde la derecha. 00 100 110 → <b>46</b> (octal).</li>
+        <li>Sufijo <b>o</b> = octal: <code>MOV SI, 12o</code> → 1×8 + 2 = 10 = <b>000Ah</b> (la hoja lo usa).</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">COMPLEMENTO A 2 (NEG)</span>
+      <ul class="small">
+        <li><b>Invertir todos los bits y sumar 1.</b> 26h = 0010 0110 → 1101 1001 → +1 → <b>1101 1010 = DAh</b>.</li>
+        <li>Atajo en hex: 100h − 26h = DAh (8 bits) · 10000h − 26h = FFDAh (16 bits).</li>
+        <li>NEG dos veces regresa al original: NEG FFDAh = 0026h.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">¿CON O SIN SIGNO?</span>
+      <ul class="small">
+        <li>Los bits son los mismos; cambia la <b>interpretación</b>.</li>
+        <li><b>Sin signo:</b> DAh = 218 · FFDAh = 65498.</li>
+        <li><b>Con signo:</b> si el bit más alto es 1, es negativo: <b>valor − 256</b> (8 bits) o <b>− 65536</b> (16 bits). DAh = 218 − 256 = <b>−38</b>.</li>
+        <li>Rangos: 8 bits 0…255 / −128…127 · 16 bits 0…65535 / −32768…32767.</li>
+      </ul></div>
+  </div>
+  <h3>El cuadro de la hoja, resuelto</h3>
+  <div class="tbl-wrap"><table class="conv-t">
+    <thead><tr><th></th><th>Hexadecimal</th><th>Decimal con signo</th><th>Decimal sin signo</th><th>Carácter ASCII</th><th>Octal</th><th>Binario</th></tr></thead>
+    <tbody>
+      <tr><th>MOV BL, 26h</th><td class="mono">26</td><td class="mono">38</td><td class="mono">38</td><td class="mono">&amp;</td><td class="mono">46</td><td class="mono">0010 0110</td></tr>
+      <tr><th>NEG BL</th><td class="mono">DA</td><td class="mono">−38</td><td class="mono">218</td><td class="mono">┌ (extendido)</td><td class="mono">332</td><td class="mono">1101 1010</td></tr>
+      <tr><th>MOV BX, 26h / NEG BX</th><td class="mono">FFDA</td><td class="mono">−38</td><td class="mono">65498</td><td class="mono">—</td><td class="mono">177732</td><td class="mono">1111 1111 1101 1010</td></tr>
+    </tbody></table></div>
+  <div class="key warn"><b>Ojo con la hoja resuelta que circula</b><p class="small">Tiene errores: pone el carácter de DAh como “U” (U es 55h), la resta 3000h − 1234h como 1DBC (es <b>1DCCh</b> = 7628) y MUL BL con BL = 00 (en esa secuencia BL = 26h, así que AX = 05h × 26h = <b>00BEh</b>). En el examen, calcula tú; no copies esos valores.</p></div>
+
+  <h3>Conversor</h3>
+  <div class="lab" id="convApp">
+    <div class="row">
+      <div class="field"><label for="convIn">Valor</label><input id="convIn" value="26h" spellcheck="false" autocomplete="off"></div>
+      <div class="field"><label for="convBits">Tamaño</label><select id="convBits"><option value="8">8 bits (AL, BL, …)</option><option value="16">16 bits (AX, BX, …)</option></select></div>
+    </div>
+    <p class="small muted">Acepta 26h, 38, 100110b, 46o, −38 o un carácter entre comillas: 'A'.</p>
+    <div id="convOut"></div>
+  </div>
+
+  <h3>Tabla ASCII que sí se usa</h3>
+  <div class="tbl-wrap"><table class="ascii">
+    <thead><tr><th>Rango</th><th>Hex</th><th>Decimal</th><th>Truco</th></tr></thead>
+    <tbody>
+      <tr><td>'0' … '9'</td><td class="mono">30h … 39h</td><td class="mono">48 … 57</td><td>Dígito = número + 30h</td></tr>
+      <tr><td>'A' … 'Z'</td><td class="mono">41h … 5Ah</td><td class="mono">65 … 90</td><td>'A' = 41h, 'Z' = 5Ah</td></tr>
+      <tr><td>'a' … 'z'</td><td class="mono">61h … 7Ah</td><td class="mono">97 … 122</td><td>Minúscula = mayúscula + 20h</td></tr>
+      <tr><td>Espacio · $ · &amp; · *</td><td class="mono">20h · 24h · 26h · 2Ah</td><td class="mono">32 · 36 · 38 · 42</td><td>$ termina cadenas de 09h</td></tr>
+      <tr><td>CR (Enter) · LF (salto)</td><td class="mono">0Dh · 0Ah</td><td class="mono">13 · 10</td><td><code>13,10</code> = nueva línea</td></tr>
+      <tr><td>Especiales entre rangos</td><td class="mono">3Ah–40h · 5Bh–60h · 7Bh–7Fh</td><td class="mono"></td><td>: ; &lt; = &gt; ? @ · [ \ ] ^ _ ` · { | } ~</td></tr>
+    </tbody></table></div>
+</section>
+
+<!-- ======================= L1 · ESTRUCTURA ======================= -->
+<section id="estructura" class="topic" data-sec="l1">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L1 · Estructura del programa</h2></div><button class="mark-btn" data-mark="l1" aria-pressed="false">Marcar como repasado</button></div>
+  <p>En los documentos aparecen tres esqueletos. Los labs usan el primero (.COM), la evaluación práctica el segundo (.EXE) y el tercero es la plantilla que crea EMU8086 con <b>new → exe template</b>.</p>
+  <div class="grid g3">
+    <div class="codebox"><div class="file">Estilo lab · org 100h (.COM)</div><pre class="code" data-lang="asm">org 100h
+
+.DATA
+msj db 13,10,'Hola$'
+
+.CODE
+lea dx, msj
+mov ah, 09h
+int 21h
+
+mov ah, 4ch
+int 21h
+ret</pre></div>
+    <div class="codebox"><div class="file">Estilo examen · .MODEL SMALL (.EXE)</div><pre class="code" data-lang="asm">.MODEL SMALL
+.STACK 100h
+
+N EQU 12
+
+.DATA
+   MSJ DB 0Dh, 0Ah, 'Hola$'
+
+.CODE
+START:
+   MOV AX, @DATA
+   MOV DS, AX
+
+   LEA DX, MSJ
+   MOV AH, 09h
+   INT 21h
+
+   MOV AX, 4C00h
+   INT 21h
+END START</pre></div>
+    <div class="codebox"><div class="file">Plantilla de EMU8086 (segmentos)</div><pre class="code" data-lang="asm">data segment
+    pkey db "press any key...$"
+ends
+
+stack segment
+    dw   128  dup(0)
+ends
+
+code segment
+start:
+    mov ax, data
+    mov ds, ax
+    mov es, ax
+
+    lea dx, pkey
+    mov ah, 9
+    int 21h
+
+    mov ax, 4c00h
+    int 21h
+ends
+
+end start</pre></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Directiva</th><th>Qué hace</th><th>Ejemplo del curso</th></tr></thead>
+    <tbody>
+      <tr><td><code>org 100h</code></td><td>Programa .COM: todo en un segmento, el código empieza en el desplazamiento 100h</td><td>Labs 4, 5, 6, 8</td></tr>
+      <tr><td><code>.MODEL SMALL</code> / <code>.STACK 100h</code></td><td>Programa .EXE con segmentos de código, datos y una pila de 100h bytes</td><td>Evaluación práctica</td></tr>
+      <tr><td><code>.DATA</code> / <code>.CODE</code></td><td>Empieza la sección de variables / de instrucciones</td><td>Todos</td></tr>
+      <tr><td><code>nombre DB …</code></td><td>Define bytes (8 bits): números, caracteres o cadenas</td><td><code>CANT_NUMS DB 0</code></td></tr>
+      <tr><td><code>nombre DW …</code></td><td>Define palabras (16 bits)</td><td><code>dw 128 dup(0)</code></td></tr>
+      <tr><td><code>n DUP(x)</code></td><td>Repite x, n veces</td><td><code>BUF_NUMS DB 20 DUP(0)</code></td></tr>
+      <tr><td><code>?</code></td><td>Reserva sin valor inicial</td><td><code>num1 db ?</code></td></tr>
+      <tr><td><code>N EQU 12</code></td><td>Constante: no ocupa memoria, se reemplaza al ensamblar</td><td><code>MOV CX, N</code></td></tr>
+      <tr><td><code>'…$'</code></td><td>El $ marca el final de la cadena para INT 21h/09h</td><td><code>'Ninguno$'</code></td></tr>
+      <tr><td><code>13,10</code> = <code>0Dh, 0Ah</code></td><td>CR + LF: regresar a la columna 0 y bajar una línea</td><td><code>msj db 13,10,'…'</code></td></tr>
+      <tr><td><code>OFFSET x</code></td><td>El desplazamiento (dirección) de x dentro de su segmento</td><td><code>mov dx, offset msj1</code></td></tr>
+      <tr><td><code>@DATA</code></td><td>El segmento de datos (se carga a DS por medio de AX)</td><td><code>MOV AX, @DATA</code></td></tr>
+      <tr><td><code>END START</code></td><td>Fin del código y etiqueta donde empieza la ejecución</td><td>Evaluación práctica</td></tr>
+    </tbody></table></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">ANATOMÍA DE UNA LÍNEA</span>
+      <div class="codebox"><pre class="code" data-lang="asm">CAPTURA:  MOV AH, 01h   ; leer caracter con eco</pre></div>
+      <ul class="small"><li><b>Etiqueta</b> (opcional, termina en :) · <b>mnemónico</b> · <b>destino, origen</b> · <b>; comentario</b>.</li><li>El destino siempre va primero: <code>MOV destino, origen</code>.</li><li>Mayúsculas y minúsculas dan igual, excepto dentro de comillas ('S' ≠ 's').</li></ul></div>
+    <div class="card tile"><span class="tag">¿POR QUÉ MOV AX, @DATA / MOV DS, AX?</span>
+      <ul class="small">
+        <li>En un .EXE, al arrancar, DS apunta al PSP (una zona de DOS), no a tus variables.</li>
+        <li>El 8086 <b>no permite</b> <code>MOV DS, @DATA</code> (número → segmento): se pasa por AX.</li>
+        <li>Si lo olvidas, INT 21h/09h imprime basura: busca el mensaje en el segmento equivocado.</li>
+        <li>En un .COM no hace falta: CS = DS = ES = SS desde el inicio.</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ======================= L2 · MOVER ======================= -->
+<section id="mover" class="topic" data-sec="l2">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L2 · Mover datos y la pila</h2></div><button class="mark-btn" data-mark="l2" aria-pressed="false">Marcar como repasado</button></div>
+  <h3>MOV: copiar, no mover</h3>
+  <p><code>MOV destino, origen</code> <b>copia</b>: el origen se queda igual. Los dos operandos deben ser del mismo tamaño.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Forma</th><th>Ejemplo</th><th>¿Válida?</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>registro ← registro</td><td><code>MOV CX, AX</code></td><td class="k">✓</td><td>Mismo tamaño</td></tr>
+      <tr><td>registro ← número</td><td><code>MOV CH, 3AH</code></td><td class="k">✓</td><td>Inmediato</td></tr>
+      <tr><td>registro ← memoria</td><td><code>MOV DL, [SI]</code> · <code>MOV AL, CANTIDAD</code></td><td class="k">✓</td><td>Lee de DS</td></tr>
+      <tr><td>memoria ← registro</td><td><code>MOV BUF_NUMS[BX], AL</code></td><td class="k">✓</td><td></td></tr>
+      <tr><td>memoria ← número</td><td><code>MOV CANT_MAYUS, 0</code></td><td class="k">✓</td><td>Con variable DB/DW (el tamaño lo da la variable)</td></tr>
+      <tr><td>segmento ← registro</td><td><code>MOV DS, AX</code></td><td class="k">✓</td><td>El puente obligado</td></tr>
+      <tr><td>memoria ← memoria</td><td><code>MOV [SI], [DI]</code></td><td class="e">✗</td><td>Usa BL: <code>MOV BL, [DI]</code> / <code>MOV [SI], BL</code></td></tr>
+      <tr><td>segmento ← número</td><td><code>MOV DS, 3000h</code></td><td class="e">✗</td><td><code>MOV AX, 3000h</code> / <code>MOV DS, AX</code></td></tr>
+      <tr><td>tamaños distintos</td><td><code>MOV CX, CANT</code> (CANT es DB)</td><td class="e">✗</td><td><code>MOV CL, CANT</code> / <code>MOV CH, 0</code></td></tr>
+      <tr><td>CS como destino</td><td><code>MOV CS, AX</code></td><td class="e">✗</td><td>CS solo cambia con saltos lejanos</td></tr>
+      <tr><td>registro de 32 bits</td><td><code>MOV EAX, 1</code></td><td class="e">✗</td><td>El 8086 solo tiene 16 bits</td></tr>
+    </tbody></table></div>
+
+  <h3>Dirección vs. contenido</h3>
+  <div class="grid g3">
+    <div class="card tile"><span class="tag">LEA DX, MSJ</span><p class="small">DX ← <b>dirección</b> de MSJ. Es lo que necesita INT 21h/09h.</p></div>
+    <div class="card tile"><span class="tag">MOV DX, OFFSET MSJ</span><p class="small">Lo mismo: DX ← dirección. Los labs usan esta forma; el examen, LEA.</p></div>
+    <div class="card tile"><span class="tag">MOV DL, CANT_NUMS</span><p class="small">DL ← <b>contenido</b> de la variable (el número guardado ahí).</p></div>
+  </div>
+  <p class="small">Con arreglos: <code>MOV AL, buffer[2 + si]</code> lee el byte en <b>buffer + 2 + SI</b>; <code>MOV DL, [SI]</code> lee el byte al que apunta SI; <code>MOV CL, buffer[1]</code> lee el segundo byte del búfer.</p>
+
+  <h3>PUSH y POP</h3>
+  <ul>
+    <li><b>PUSH reg16</b>: SP = SP − 2 y guarda el registro en SS:SP. <b>POP reg16</b>: lee SS:SP y SP = SP + 2.</li>
+    <li>Solo trabajan con <b>16 bits</b> (PUSH CX sí; PUSH CL no).</li>
+    <li>Uso típico del curso: <b>guardar CX</b> mientras algo adentro del ciclo lo usa (Lab 8), o pasar un valor de un registro a otro (PUSH AX … POP CX).</li>
+    <li>Sale en orden inverso: si haces PUSH AX y PUSH BX, el primer POP recibe lo de BX.</li>
+  </ul>
+  <script type="text/x-asm" id="demo-pila">
+MOV AX, 3516h
+MOV CX, 5500h
+PUSH AX
+PUSH CX
+MOV AX, 0
+POP AX
+POP CX</script>
+  <div data-emu="demo-pila" data-regs="SS=A000,SP=FFF6,DS=3000" data-watch="A000:FFF0"></div>
+  <details class="qa"><summary><span class="qn">L2.1</span>Después de la demo, ¿AX y CX quedaron como al principio?</summary><div class="ans"><p><b>No: quedaron intercambiados.</b> AX = 5500h y CX = 3516h, porque el primer POP saca lo último que entró (CX).</p></div></details>
+</section>
+
+<!-- ======================= L3 · ARITMÉTICA ======================= -->
+<section id="aritmetica" class="topic" data-sec="l3">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L3 · Aritmética</h2></div><button class="mark-btn" data-mark="l3" aria-pressed="false">Marcar como repasado</button></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Instrucción</th><th>Qué hace</th><th>Ejemplo de los documentos</th><th>Banderas</th></tr></thead>
+    <tbody>
+      <tr><td><code>ADD d, o</code></td><td>d = d + o</td><td><code>ADD CH, 25h</code> · <code>add al, al</code> (el doble)</td><td>todas</td></tr>
+      <tr><td><code>SUB d, o</code></td><td>d = d − o</td><td><code>SUB AX, DX</code> · <code>sub al, 30h</code></td><td>todas</td></tr>
+      <tr><td><code>INC d</code> / <code>DEC d</code></td><td>d + 1 / d − 1</td><td><code>INC CANT_NUMS</code> · <code>DEC SI</code></td><td>todas menos CF</td></tr>
+      <tr><td><code>NEG d</code></td><td>d = 0 − d (complemento a 2)</td><td><code>neg bl</code></td><td>todas; CF = 1 si d ≠ 0</td></tr>
+      <tr><td><code>MUL o</code></td><td>sin signo · 8 bits: AX = AL × o · 16 bits: DX:AX = AX × o</td><td><code>MUL BL</code> · <code>MUL BX</code></td><td>CF = OF</td></tr>
+      <tr><td><code>DIV o</code></td><td>sin signo · 8 bits: AL = AX ÷ o, AH = residuo · 16 bits: AX, DX</td><td><code>MOV BL, 10</code> / <code>DIV BL</code></td><td>indefinidas</td></tr>
+      <tr><td><code>SHR d, 1</code></td><td>corre a la derecha: d ÷ 2</td><td><code>shr al, 1</code> (promedio del Lab 6)</td><td>CF = bit que sale</td></tr>
+    </tbody></table></div>
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 230" role="img" aria-label="MUL BL multiplica AL por BL y deja el resultado en AX; DIV BL divide AX entre BL y deja cociente en AL y residuo en AH">
+      <defs><marker id="md-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="ah"/></marker></defs>
+      <text class="b c" x="190" y="26">MUL BL</text><text class="b c" x="570" y="26">DIV BL</text>
+      <line class="sep" x1="380" y1="10" x2="380" y2="220"/>
+      <rect class="nd-v" x="40" y="50" width="90" height="42" rx="6"/><text class="c b" x="85" y="70">AL</text><text class="xs mono c" x="85" y="85">05h</text>
+      <text class="b c" x="160" y="78">×</text>
+      <rect class="nd-c" x="190" y="50" width="90" height="42" rx="6"/><text class="c b" x="235" y="70">BL</text><text class="xs mono c" x="235" y="85">26h</text>
+      <path class="ar" d="M160,96 V138" marker-end="url(#md-a)"/>
+      <rect class="nd-v" x="70" y="140" width="90" height="42" rx="6"/><rect class="nd-v" x="160" y="140" width="90" height="42" rx="6"/>
+      <text class="c b" x="115" y="160">AH</text><text class="xs mono c" x="115" y="175">00h</text><text class="c b" x="205" y="160">AL</text><text class="xs mono c" x="205" y="175">BEh</text>
+      <text class="xs mut c" x="160" y="205">AX = 5 × 38 = 190 = 00BEh</text>
+      <rect class="nd-v" x="420" y="50" width="90" height="42" rx="6"/><rect class="nd-v" x="510" y="50" width="90" height="42" rx="6"/>
+      <text class="c b" x="465" y="70">AH</text><text class="xs mono c" x="465" y="85">00h</text><text class="c b" x="555" y="70">AL</text><text class="xs mono c" x="555" y="85">64h</text>
+      <text class="b c" x="630" y="78">÷</text>
+      <rect class="nd-c" x="650" y="50" width="80" height="42" rx="6"/><text class="c b" x="690" y="70">BL</text><text class="xs mono c" x="690" y="85">07h</text>
+      <path class="ar" d="M510,96 V138" marker-end="url(#md-a)"/>
+      <rect class="nd-s" x="420" y="140" width="90" height="42" rx="6"/><rect class="nd-m" x="510" y="140" width="90" height="42" rx="6"/>
+      <text class="c b" x="465" y="160">AH</text><text class="xs mono c" x="465" y="175">02h · residuo</text><text class="c b" x="555" y="160">AL</text><text class="xs mono c" x="555" y="175">0Eh · cociente</text>
+      <text class="xs mut c" x="570" y="205">AX = 100 ÷ 7 = 14 residuo 2</text>
+    </svg>
+    <figcaption><b>El operando “escondido”.</b> MUL y DIV de 8 bits siempre usan AL / AX. En 16 bits: <code>MUL BX</code> → DX:AX = AX × BX; <code>DIV BX</code> → DX:AX ÷ BX, cociente en AX y residuo en DX.</figcaption>
+  </figure>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">ASCII ↔ NÚMERO</span>
+      <div class="codebox"><pre class="code" data-lang="asm">mov ah, 01h
+int 21h          ; AL = '7' = 37h
+sub al, 30h      ; AL = 07h (número)
+add al, al       ; AL = 0Eh (el doble)
+add al, 30h      ; de vuelta a ASCII
+mov dl, al
+mov ah, 02h
+int 21h</pre></div></div>
+    <div class="card tile"><span class="tag">NÚMERO DE DOS CIFRAS (EXAMEN)</span>
+      <div class="codebox"><pre class="code" data-lang="asm">MOV AL, CANT_MAYUS
+MOV AH, 0        ; AX = contador
+MOV BL, 10
+DIV BL           ; AL = decenas, AH = unidades
+MOV BH, AH       ; salvar unidades
+CMP AL, 0
+JE MAY_UNID      ; sin cero a la izquierda
+MOV DL, AL
+ADD DL, 30h
+MOV AH, 02h
+INT 21h
+MAY_UNID:
+MOV DL, BH
+ADD DL, 30h
+MOV AH, 02h
+INT 21h</pre></div></div>
+  </div>
+  <h3>Pruébalo: MUL y DIV</h3>
+  <script type="text/x-asm" id="demo-mul">
+MOV AX, 205H
+MOV BL, 26h
+MUL BL
+MOV BX, 0026h
+MUL BX
+MOV AX, 0064h
+MOV BL, 7
+DIV BL</script>
+  <div data-emu="demo-mul" data-regs="AX=3516,CX=550A,DX=1234"></div>
+</section>
+
+<!-- ======================= L4 · SALTOS ======================= -->
+<section id="saltos" class="topic" data-sec="l4">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L4 · Comparar y saltar</h2></div><button class="mark-btn" data-mark="l4" aria-pressed="false">Marcar como repasado</button></div>
+  <p><b>CMP a, b</b> hace a − b <b>sin guardar el resultado</b>: solo deja las banderas. El salto que va justo después decide mirando esas banderas. Truco para leerlos: <b>J</b>ump if <b>B</b>elow (menor), <b>A</b>bove (mayor), <b>E</b>qual (igual), <b>N</b>ot.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Salto</th><th>Salta si (después de CMP a, b)</th><th>Banderas</th><th>En los documentos</th></tr></thead>
+    <tbody>
+      <tr><td><code>JE</code> (= JZ)</td><td>a = b</td><td class="mono">ZF = 1</td><td><code>JE VOLVER</code>, <code>je fin</code></td></tr>
+      <tr><td><code>JNE</code> (= JNZ)</td><td>a ≠ b</td><td class="mono">ZF = 0</td><td><code>JNE MAY_LISTAR</code></td></tr>
+      <tr><td><code>JB</code></td><td>a &lt; b (sin signo)</td><td class="mono">CF = 1</td><td><code>jb no_valido</code></td></tr>
+      <tr><td><code>JBE</code></td><td>a ≤ b</td><td class="mono">CF = 1 o ZF = 1</td><td><code>jbe estado_bajo</code></td></tr>
+      <tr><td><code>JA</code></td><td>a &gt; b</td><td class="mono">CF = 0 y ZF = 0</td><td><code>ja no_valido</code></td></tr>
+      <tr><td><code>JAE</code></td><td>a ≥ b</td><td class="mono">CF = 0</td><td>(equivalente; no aparece)</td></tr>
+      <tr><td><code>JMP</code></td><td>siempre</td><td class="mono">—</td><td><code>jmp inicio</code></td></tr>
+    </tbody></table></div>
+  <p class="small">Los caracteres ASCII son números <b>sin signo</b>: por eso el curso usa JB/JA. JL/JG (con signo) no aparecen en los documentos.</p>
+
+  <h3>La cascada de rangos del examen</h3>
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 170" role="img" aria-label="Recta ASCII de 00h a 7Fh con los rangos de especiales, dígitos, mayúsculas y minúsculas">
+      <rect class="nd-s" x="40" y="60" width="255" height="40"/><rect class="nd-c" x="295" y="60" width="53.1" height="40"/><rect class="nd-s" x="348.1" y="60" width="37.2" height="40"/><rect class="nd-m" x="385.3" y="60" width="138.1" height="40"/><rect class="nd-s" x="523.4" y="60" width="31.9" height="40"/><rect class="nd-v" x="555.3" y="60" width="138.1" height="40"/><rect class="nd-s" x="693.4" y="60" width="26.6" height="40"/>
+      <text class="sm b c" x="167" y="85">especiales</text><text class="xs b c" x="321" y="85">0–9</text><text class="xs b c" x="454" y="85">A–Z</text><text class="xs b c" x="624" y="85">a–z</text>
+      <text class="xs mono c" x="295" y="50">30h</text><text class="xs mono c" x="348" y="38">39h</text><text class="xs mono c" x="385" y="50">41h</text><text class="xs mono c" x="523" y="38">5Ah</text><text class="xs mono c" x="555" y="50">61h</text><text class="xs mono c" x="693" y="38">7Ah</text>
+      <text class="xs mono" x="40" y="118">00h</text><text class="xs mono e" x="720" y="118">7Fh</text>
+      <text class="xs mut c" x="380" y="150">Cada frontera es un CMP: abajo del inicio → JB ES_ESPEC · hasta el final → JBE a la categoría</text>
+    </svg>
+    <figcaption><b>Los rangos van en orden:</b> especiales · dígitos · especiales · mayúsculas · especiales · minúsculas · especiales. Por eso la cascada del examen compara con '0', '9', 'A', 'Z', 'a', 'z' en ese orden.</figcaption>
+  </figure>
+  <div class="grid g2">
+    <div class="codebox"><div class="file">Bloque 1 del examen (clasificación)</div><pre class="code" data-lang="asm">CMP AL, '0'
+JB ES_ESPEC      ; menor que '0'
+CMP AL, '9'
+JBE ES_NUM       ; '0'..'9'
+CMP AL, 'A'
+JB ES_ESPEC      ; entre '9' y 'A'
+CMP AL, 'Z'
+JBE ES_MAYUS     ; 'A'..'Z'
+CMP AL, 'a'
+JB ES_ESPEC      ; entre 'Z' y 'a'
+CMP AL, 'z'
+JBE ES_MINUS     ; 'a'..'z'
+JMP ES_ESPEC     ; mayor que 'z'</pre></div>
+    <div class="card tile"><span class="tag">REGLAS DE ORO</span>
+      <ul class="small">
+        <li>Después de cada rama, <b>JMP</b> a la salida o a SIGUIENTE; si no, la ejecución “se cae” a la etiqueta de abajo.</li>
+        <li>La última rama puede quedar sin JMP si justo abajo está la salida (ES_ESPEC en el examen).</li>
+        <li>Para validar un rango: <code>CMP AL, '0'</code> / <code>JB no_valido</code> / <code>CMP AL, '9'</code> / <code>JA no_valido</code>.</li>
+        <li><b>Salto corto:</b> JE, JB… solo llegan a ±127 bytes. Para ir lejos: <code>JE VOLVER</code> … <code>VOLVER: JMP INICIO_PROGRAMA</code>.</li>
+      </ul></div>
+  </div>
+  <h3>Pruébalo: ¿qué rama toma 'm'?</h3>
+  <p class="small">BL termina en 2 (mayúscula), 3 (minúscula) o 4 (especial). Cambia mentalmente AL y predice el camino.</p>
+  <script type="text/x-asm" id="demo-cmp">
+MOV AL, 'm'
+CMP AL, 'A'
+JB ES_ESPEC
+CMP AL, 'Z'
+JBE ES_MAYUS
+CMP AL, 'a'
+JB ES_ESPEC
+CMP AL, 'z'
+JBE ES_MINUS
+ES_ESPEC:
+MOV BL, 4
+JMP FIN
+ES_MAYUS:
+MOV BL, 2
+JMP FIN
+ES_MINUS:
+MOV BL, 3
+FIN:
+NOP</script>
+  <div data-emu="demo-cmp" data-regs="AX=0,BX=0"></div>
+</section>
+
+<!-- ======================= L5 · CICLOS ======================= -->
+<section id="ciclos" class="topic" data-sec="l5">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L5 · Ciclos con LOOP</h2></div><button class="mark-btn" data-mark="l5" aria-pressed="false">Marcar como repasado</button></div>
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 230" role="img" aria-label="Diagrama de flujo de LOOP: cargar CX, cuerpo, restar 1 a CX, si CX distinto de 0 repetir">
+      <defs><marker id="lp-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="ah"/></marker></defs>
+      <rect class="nd-m" x="20" y="90" width="150" height="46" rx="10"/><text class="c b mono" x="95" y="118">MOV CX, N</text>
+      <rect class="nd-c" x="210" y="90" width="170" height="46" rx="10"/><text class="c b" x="295" y="110">CICLO:</text><text class="xs c mut" x="295" y="126">cuerpo (usa CX con cuidado)</text>
+      <rect class="nd-v" x="420" y="90" width="150" height="46" rx="10"/><text class="c b mono" x="495" y="110">LOOP CICLO</text><text class="xs c mut" x="495" y="126">CX = CX − 1</text>
+      <polygon class="nd" points="660,63 712,113 660,163 608,113"/><text class="c b sm" x="660" y="117">CX ≠ 0 ?</text>
+      <path class="ar" d="M170,113 H208" marker-end="url(#lp-a)"/><path class="ar" d="M380,113 H418" marker-end="url(#lp-a)"/><path class="ar" d="M570,113 H606" marker-end="url(#lp-a)"/>
+      <path class="ar acc" d="M660,63 V30 H295 V88" marker-end="url(#lp-a)"/><text class="sm lbl" x="470" y="24">sí → otra vuelta</text>
+      <path class="ar" d="M660,163 V210" marker-end="url(#lp-a)"/><text class="sm lbl" x="672" y="200">no → sigue abajo</text>
+    </svg>
+    <figcaption><b>LOOP = “resta 1 a CX y, si no llegó a 0, regresa”.</b> No modifica banderas. Si CX empieza en 0, el primer LOOP lo deja en FFFFh: ¡65 536 vueltas!</figcaption>
+  </figure>
+  <div class="grid g3">
+    <div class="card tile"><span class="tag">N VECES</span><div class="codebox"><pre class="code" data-lang="asm">   MOV CX, N
+CAPTURA:
+   MOV AH, 01h
+   INT 21h
+   ; …
+   LOOP CAPTURA</pre></div></div>
+    <div class="card tile"><span class="tag">RECORRER UN BÚFER</span><div class="codebox"><pre class="code" data-lang="asm">   MOV CL, CANT_MAYUS
+   MOV CH, 0
+   LEA SI, BUF_MAYUS
+MAY_CICLO:
+   MOV DL, [SI]
+   MOV AH, 02h
+   INT 21h
+   INC SI
+   LOOP MAY_CICLO</pre></div></div>
+    <div class="card tile"><span class="tag">SI ALGO ADENTRO USA CX</span><div class="codebox"><pre class="code" data-lang="asm">imprimir_caracteres:
+push cx
+; … mov cx, 1 / int 10h …
+pop cx
+loop imprimir_caracteres</pre></div></div>
+  </div>
+  <div class="key"><b>Ciclo infinito con una sola salida (Lab 4)</b><p class="small">No todo ciclo es LOOP. El Lab 4 repite con <code>jmp inicio</code> desde cada rama y la <b>única</b> salida es la rama crítica, que termina con 4Ch. El Lab 6 igual, pero termina con <code>hlt</code>.</p></div>
+  <h3>Pruébalo: 0 a 9 en pantalla</h3>
+  <script type="text/x-asm" id="demo-loop">
+org 100h
+
+.DATA
+titulo db 13,10,'Digitos: $'
+
+.CODE
+lea dx, titulo
+mov ah, 09h
+int 21h
+
+mov cx, 10
+mov dl, '0'
+ciclo:
+mov ah, 02h
+int 21h
+inc dl
+loop ciclo
+
+mov ah, 4ch
+int 21h
+ret</script>
+  <div data-emu="demo-loop" data-screen="1"></div>
+</section>
+
+<!-- ======================= L6 · INTERRUPCIONES ======================= -->
+<section id="interrupciones" class="topic" data-sec="l6">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L6 · INT 21h e INT 10h</h2></div><button class="mark-btn" data-mark="l6" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Una interrupción es “llamar al sistema para que haga algo”: leer el teclado, imprimir, limpiar la pantalla. Antes de <code>INT</code> se ponen los datos en registros; el <b>número de función siempre va en AH</b>.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>INT 21h · AH =</th><th>Hace</th><th>Le das</th><th>Te devuelve / cambia</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">01h</td><td>Lee una tecla <b>con eco</b></td><td>—</td><td><b>AL</b> = código ASCII</td></tr>
+      <tr><td class="mono">02h</td><td>Imprime un carácter</td><td><b>DL</b> = carácter</td><td>AL = DL (¡cambia AL!)</td></tr>
+      <tr><td class="mono">09h</td><td>Imprime una cadena</td><td><b>DS:DX</b> = dirección, termina en <b>$</b></td><td>AL = 24h</td></tr>
+      <tr><td class="mono">0Ah</td><td>Lee una cadena con Enter</td><td><b>DS:DX</b> = búfer; [0] = máximo</td><td>[1] = cuántos · [2…] caracteres + 0Dh</td></tr>
+      <tr><td class="mono">4Ch</td><td>Termina el programa</td><td>AL = código de salida</td><td>—</td></tr>
+    </tbody></table></div>
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 170" role="img" aria-label="Búfer de INT 21h función 0Ah con máximo, cantidad leída, caracteres y Enter">
+      <g class="mono">
+        <rect class="nd-m" x="40" y="60" width="60" height="44"/><rect class="nd-c" x="100" y="60" width="60" height="44"/>
+        <rect class="nd" x="160" y="60" width="60" height="44"/><rect class="nd" x="220" y="60" width="60" height="44"/><rect class="nd" x="280" y="60" width="60" height="44"/><rect class="nd" x="340" y="60" width="60" height="44"/><rect class="nd" x="400" y="60" width="60" height="44"/>
+        <rect class="nd-v" x="460" y="60" width="60" height="44"/><rect class="nd" x="520" y="60" width="60" height="44"/><rect class="nd" x="580" y="60" width="60" height="44"/><rect class="nd" x="640" y="60" width="60" height="44"/>
+      </g>
+      <text class="mono c b" x="70" y="87">20</text><text class="mono c b" x="130" y="87">05</text><text class="mono c" x="190" y="87">'O'</text><text class="mono c" x="250" y="87">'s'</text><text class="mono c" x="310" y="87">'k'</text><text class="mono c" x="370" y="87">'a'</text><text class="mono c" x="430" y="87">'r'</text><text class="mono c b" x="490" y="87">0Dh</text><text class="mono c mut" x="550" y="87">'$'</text><text class="mono c mut" x="610" y="87">'$'</text><text class="mono c mut" x="670" y="87">…</text>
+      <text class="xs mono c" x="70" y="48">buffer</text><text class="xs mono c" x="130" y="48">+1</text><text class="xs mono c" x="190" y="48">+2</text>
+      <text class="xs mut c" x="70" y="124">máximo</text><text class="xs mut c" x="70" y="138">(lo pones tú)</text>
+      <text class="xs mut c" x="130" y="124">leídos</text><text class="xs mut c" x="130" y="138">(lo llena DOS)</text>
+      <text class="xs mut c" x="310" y="124">los caracteres: se imprimen con</text><text class="xs mono c" x="310" y="138">lea dx, buffer + 2</text>
+      <text class="xs mut c" x="490" y="124">el Enter</text>
+      <text class="xs mut c" x="610" y="124">relleno de DB 20 DUP('$')</text>
+    </svg>
+    <figcaption><b>Búfer de la función 0Ah</b> (Lab 2 y Lab 8). <code>buffer db 20</code> / <code>db ?</code> / <code>db 20 dup('$')</code>. La cantidad leída se lee con <code>mov cl, buffer[1]</code>.</figcaption>
+  </figure>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>INT 10h · AH =</th><th>Hace</th><th>Le das</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">00h</td><td>Modo de video; con AL = 03h limpia la pantalla</td><td><code>MOV AX, 0003h</code></td></tr>
+      <tr><td class="mono">02h</td><td>Mueve el cursor</td><td>DH = fila, DL = columna, BH = 0</td></tr>
+      <tr><td class="mono">03h</td><td>Lee la posición del cursor</td><td>BH = 0 → devuelve DH, DL (y CX)</td></tr>
+      <tr><td class="mono">09h</td><td>Escribe un carácter con color, <b>sin mover el cursor</b></td><td>AL = carácter, BL = color, BH = 0, CX = veces</td></tr>
+    </tbody></table></div>
+  <div class="colores" aria-label="Los 16 colores de texto">
+    <span class="c0 bw">0 negro</span><span class="c1">1 azul</span><span class="c2">2 verde</span><span class="c3">3 cian</span><span class="c4">4 rojo</span><span class="c5">5 magenta</span><span class="c6">6 café</span><span class="c7">7 gris claro</span>
+    <span class="c8">8 gris</span><span class="c9">9 azul claro</span><span class="ca">A verde claro</span><span class="cb">B cian claro</span><span class="cc">C rojo claro</span><span class="cd">D magenta claro</span><span class="ce">E amarillo</span><span class="cf">F blanco</span>
+  </div>
+  <p class="small">El atributo es un byte: <b>nibble alto = fondo</b>, <b>nibble bajo = texto</b>. <code>0Ch</code> = fondo negro, texto rojo claro · <code>1Eh</code> = fondo azul, texto amarillo.</p>
+  <h3>Pruébalo: leer una cadena con 0Ah</h3>
+  <p class="small">Mira la memoria: después de la segunda INT aparecen 14h (máximo 20), 05h (leídos) y los caracteres.</p>
+  <script type="text/x-asm" id="demo-0a">
+org 100h
+
+.DATA
+nombre db 'Escribe tu nombre: $'
+buffer db 20
+       db ?
+       db 20 dup('$')
+saludo db 13,10,'Hola $'
+
+.CODE
+mov ah, 09h
+lea dx, nombre
+int 21h
+
+mov ah, 0ah
+lea dx, buffer
+int 21h
+
+mov ah, 09h
+lea dx, saludo
+int 21h
+
+mov ah, 09h
+lea dx, buffer + 2
+int 21h
+
+mov ah, 4ch
+int 21h
+ret</script>
+  <div data-emu="demo-0a" data-screen="1" data-input="Oskar\r"></div>
+</section>
+
+<!-- ======================= L7 · PROHIBIDO ======================= -->
+<section id="prohibido" class="topic" data-sec="l7">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · El lenguaje</p><h2>L7 · Lo que no se usa</h2></div><button class="mark-btn" data-mark="l7" aria-pressed="false">Marcar como repasado</button></div>
+  <p>El examen se califica contra el estilo del curso. Limítate a lo que aparece en los documentos. El comparador del banco te avisa si usas algo de afuera.</p>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">SÍ APARECE EN LOS DOCUMENTOS</span>
+      <p class="small mono">MOV · LEA · OFFSET · ADD · SUB · INC · DEC · NEG · MUL · DIV · SHR · CMP · JMP · JE · JNE · JB · JBE · JA · LOOP · PUSH · POP · INT 21h (01h, 02h, 09h, 0Ah, 4Ch) · INT 10h (00h, 02h, 03h, 09h) · HLT · RET · DB · DW · DUP · EQU · ORG · .MODEL · .STACK · .DATA · .CODE · END</p></div>
+    <div class="card tile"><span class="tag">NO APARECE (EVÍTALO)</span>
+      <p class="small mono">XOR · AND · OR · NOT · TEST · SHL · IMUL · IDIV · CALL / PROC · JG · JL · JGE · JLE · XCHG · LOOPE · MOVSB / LODSB / STOSB · registros de 32 bits (EAX…) · MOVZX</p></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Si se te ocurre…</th><th>Escríbelo así (estilo del curso)</th></tr></thead>
+    <tbody>
+      <tr><td><code>XOR AX, AX</code> (poner en 0)</td><td><code>MOV AX, 0</code> · <code>MOV BH, 0</code></td></tr>
+      <tr><td><code>SHL AL, 1</code> (× 2)</td><td><code>ADD AL, AL</code> (como el Lab 2)</td></tr>
+      <tr><td><code>TEST AL, 1</code> (¿par?)</td><td><code>MOV AH, 0</code> / <code>MOV BL, 2</code> / <code>DIV BL</code> / <code>CMP AH, 0</code></td></tr>
+      <tr><td><code>AND AL, 0DFh</code> (a mayúscula)</td><td>Verifica que sea minúscula y <code>SUB AL, 20h</code></td></tr>
+      <tr><td><code>JG</code> / <code>JL</code> con caracteres</td><td><code>JA</code> / <code>JB</code> (sin signo)</td></tr>
+      <tr><td><code>MOVZX CX, CANT</code></td><td><code>MOV CL, CANT</code> / <code>MOV CH, 0</code></td></tr>
+      <tr><td><code>CALL</code> a una rutina</td><td>Escribe el código en línea (el examen repite el bloque 4 veces)</td></tr>
+    </tbody></table></div>
+</section>
+
+<!-- ======================= P1 · ESCENARIOS ======================= -->
+<section id="escenarios" class="topic" data-sec="p1">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 3 · Patrones del profe</p><h2>P1 · Escenarios del examen</h2></div><button class="mark-btn" data-mark="p1" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Estos son los tipos de pregunta que salen de sus documentos. Aprende a <b>reconocerlos</b> en el enunciado y ten la receta lista.</p>
+  <div class="grid g2 escen">
+    <div class="card tile"><span class="tag">E1 · TABLA DE REGISTROS</span><p class="small"><b>Lo reconoces por:</b> “llene el cuadro con el contenido hexadecimal y su equivalente decimal” después de una lista de instrucciones.</p><p class="small"><b>Receta:</b> una fila por instrucción; solo cambia el destino (y en MUL/DIV/PUSH/POP, los implícitos). Copia lo demás. Decimal: expande en potencias de 16.</p><p class="small"><a href="#trazas">Practica: T1, T2, T4</a></p></div>
+    <div class="card tile"><span class="tag">E2 · MAPA DE MEMORIA</span><p class="small"><b>Lo reconoces por:</b> “abra su mapa de memoria en 3000:0001… ¿qué valor contiene la dirección?”</p><p class="small"><b>Receta:</b> física = segmento con un 0 + desplazamiento. Palabras: byte bajo en la dirección, alto en la siguiente.</p><p class="small"><a href="#traza-t2">Practica: T2, T6</a></p></div>
+    <div class="card tile"><span class="tag">E3 · CUADRO DE SEIS FORMATOS</span><p class="small"><b>Lo reconoces por:</b> columnas Hexadecimal · Decimal con signo · sin signo · ASCII · Octal · Binario, casi siempre con NEG.</p><p class="small"><b>Receta:</b> binario desde el hex (4 bits por dígito), octal en grupos de 3, signo por el bit alto (valor − 256).</p><p class="small"><a href="#traza-t3">Practica: T3</a> · <a href="#convApp">Conversor</a></p></div>
+    <div class="card tile"><span class="tag">E4 · DIRECCIÓN FÍSICA POR MODO</span><p class="small"><b>Lo reconoces por:</b> una tabla de registros (RAX … RIP, CS SS ES DS) y la tabla de modos de direccionamiento.</p><p class="small"><b>Receta:</b> identifica el modo, elige el segmento (BP → SS), agrega el 0 y suma.</p><p class="small"><a href="#dir-ej">Practica: D1–D15</a></p></div>
+    <div class="card tile"><span class="tag">E5 · ¿DÓNDE ESTÁN LOS DATOS?</span><p class="small"><b>Lo reconoces por:</b> <code>MOV BX, OFFSET NUMERO1</code>, “búsquelo en CS:BX… ¿y en DS:BX?”, <code>CS:[DI]</code>.</p><p class="small"><b>Receta:</b> en un .COM las variables viven en CS; OFFSET es el desplazamiento; el prefijo CS: lee de ahí aunque DS apunte a otro lado.</p><p class="small"><a href="#traza-t6">Practica: T6</a> · <a href="#banco">E16</a></p></div>
+    <div class="card tile"><span class="tag">E6 · PLANTILLA POR BLOQUES</span><p class="small"><b>Lo reconoces por:</b> “EVALUACIÓN PRÁCTICA… BLOQUE 1: CAPTURA Y CLASIFICACIÓN · Instrucciones: …”.</p><p class="small"><b>Receta:</b> bloque 1 = LOOP con cascada y búferes indexados con BX; bloque 2 = por categoría: etiqueta, DIV entre 10, lista con SI; bloque 3 = S/s.</p><p class="small"><a href="#banco">Practica: E20, E21</a></p></div>
+    <div class="card tile"><span class="tag">E7 · VALIDAR Y CLASIFICAR</span><p class="small"><b>Lo reconoces por:</b> “ingrese un dígito del 0 al 9”, estados bajo / estable / crítico, “valor inválido”.</p><p class="small"><b>Receta:</b> CMP '0' + JB y CMP '9' + JA a inválido; luego cascada con JBE.</p><p class="small"><a href="#banco">Practica: E07, E08, E10</a></p></div>
+    <div class="card tile"><span class="tag">E8 · CICLO CON UNA SOLA SALIDA</span><p class="small"><b>Lo reconoces por:</b> “se repite mientras no sea crítico”, “monitoreo continuo”, “única salida”.</p><p class="small"><b>Receta:</b> etiqueta <code>inicio:</code> arriba, cada rama normal termina en <code>jmp inicio</code>, solo la rama final termina el programa.</p><p class="small"><a href="#banco">Practica: E09</a></p></div>
+    <div class="card tile"><span class="tag">E9 · LEER UNA CADENA</span><p class="small"><b>Lo reconoces por:</b> “escriba su nombre”, “ingrese una palabra”, <code>buffer db 20</code>.</p><p class="small"><b>Receta:</b> AH = 0Ah con DX = buffer; la cantidad en buffer[1]; los caracteres desde buffer + 2.</p><p class="small"><a href="#banco">Practica: E06, E19</a></p></div>
+    <div class="card tile"><span class="tag">E10 · COLORES CON INT 10h</span><p class="small"><b>Lo reconoces por:</b> “cada letra de un color”, arreglo <code>colores db 0Ch, 0Ah…</code>.</p><p class="small"><b>Receta:</b> por letra: PUSH CX, 03h (cursor), 09h (AL, BL, CX = 1), INC DL, 02h, índices SI/DI, POP CX, LOOP.</p><p class="small"><a href="#banco">Practica: E19</a></p></div>
+    <div class="card tile"><span class="tag">E11 · CONTADOR DE DOS CIFRAS</span><p class="small"><b>Lo reconoces por:</b> “convertir el contador a ASCII (soporta ≥ 10)”, “decenas y unidades”.</p><p class="small"><b>Receta:</b> AH = 0, BL = 10, DIV BL, BH = AH, si AL = 0 saltar decenas, +30h a cada cifra.</p><p class="small"><a href="#banco">Practica: E14</a></p></div>
+    <div class="card tile"><span class="tag">E12 · REPETIR S/s</span><p class="small"><b>Lo reconoces por:</b> “¿Desea repetir el proceso? (S = Sí / Otra tecla = Salir)”.</p><p class="small"><b>Receta:</b> leer, CMP 'S' / JE VOLVER, CMP 's' / JE VOLVER, JMP FIN; VOLVER: JMP INICIO; al inicio reiniciar contadores y limpiar pantalla.</p><p class="small"><a href="#banco">Practica: E18</a></p></div>
+    <div class="card tile"><span class="tag">E13 · ARITMÉTICA CON DÍGITOS</span><p class="small"><b>Lo reconoces por:</b> “el doble del número”, “la resta (segundo − primero)”.</p><p class="small"><b>Receta:</b> leer, − 30h, guardar en variable, operar en AL, + 30h, imprimir con 02h.</p><p class="small"><a href="#banco">Practica: E04, E05</a></p></div>
+    <div class="card tile"><span class="tag">E14 · PROMEDIO Y BANDERAS DE ESTADO</span><p class="small"><b>Lo reconoces por:</b> “promedio móvil”, “dos picos seguidos”, variables tipo <code>anterior db 0FFh</code> (centinela) y <code>picoAnt db 0</code> (bandera).</p><p class="small"><b>Receta:</b> suma en AL, <code>shr al, 1</code>, comparar con el umbral; guardar la lectura en <code>anterior</code> para la siguiente vuelta.</p><p class="small"><a href="#banco">Practica: E17</a></p></div>
+  </div>
+</section>
+
+<!-- ======================= P2 · ERRORES ======================= -->
+<section id="errores" class="topic" data-sec="p2">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 3 · Patrones del profe</p><h2>P2 · Errores típicos</h2></div><button class="mark-btn" data-mark="p2" aria-pressed="false">Marcar como repasado</button></div>
+  <p>En papel no hay ensamblador que te avise. Estos son los que más puntos cuestan; el simulador de esta guía detecta la mayoría con un mensaje en español.</p>
+  <div class="tbl-wrap"><table class="errs">
+    <thead><tr><th>✗ Así no</th><th>Qué pasa</th><th>✓ Así sí</th></tr></thead>
+    <tbody>
+      <tr><td><code>.CODE</code> sin <code>MOV AX, @DATA</code> / <code>MOV DS, AX</code></td><td>09h busca el mensaje en el PSP: imprime basura</td><td>Siempre las dos líneas al inicio del .EXE</td></tr>
+      <tr><td><code>MOV DS, @DATA</code></td><td>Error: número → segmento</td><td><code>MOV AX, @DATA</code> / <code>MOV DS, AX</code></td></tr>
+      <tr><td><code>msj db 'Hola'</code> sin $</td><td>09h sigue imprimiendo hasta encontrar un 24h</td><td><code>msj db 'Hola$'</code></td></tr>
+      <tr><td><code>MOV DL, CANT</code> / <code>INT 21h</code> (02h)</td><td>Imprime un carácter de control, no el número</td><td><code>ADD DL, 30h</code> antes</td></tr>
+      <tr><td><code>MOV BL, 10</code> / <code>DIV BL</code> con AH sucio</td><td>Dividendo equivocado o “DIV desbordado”</td><td><code>MOV AH, 0</code> antes de DIV</td></tr>
+      <tr><td>Residuo en AH y luego <code>MOV AH, 02h</code></td><td>Se pierden las unidades</td><td><code>MOV BH, AH</code> antes</td></tr>
+      <tr><td><code>DIV 10</code> · <code>MUL 2</code></td><td>No existen con inmediato</td><td><code>MOV BL, 10</code> / <code>DIV BL</code></td></tr>
+      <tr><td><code>MOV CX, CANT</code> (CANT es DB)</td><td>Error de tamaños</td><td><code>MOV CL, CANT</code> / <code>MOV CH, 0</code></td></tr>
+      <tr><td>LOOP con CX = 0</td><td>65 536 vueltas</td><td><code>CMP CL, 0</code> / <code>JE fin</code> antes (Lab 8)</td></tr>
+      <tr><td><code>MOV CX, 1</code> / <code>INT 10h</code> dentro del LOOP</td><td>Se pierde el contador</td><td><code>PUSH CX</code> … <code>POP CX</code></td></tr>
+      <tr><td>Leer la tecla en AL y luego imprimir con 09h</td><td>09h deja AL = 24h</td><td>Guarda la tecla en BL primero</td></tr>
+      <tr><td>Olvidar el <code>JMP</code> al final de una rama</td><td>Cae en la rama de abajo y muestra dos mensajes</td><td><code>jmp salida</code> / <code>JMP SIGUIENTE</code></td></tr>
+      <tr><td><code>MOV [SI], [DI]</code></td><td>Memoria → memoria no existe</td><td><code>MOV BL, [DI]</code> / <code>MOV [SI], BL</code></td></tr>
+      <tr><td><code>MOV DL, [CX]</code></td><td>CX no puede ir entre corchetes</td><td>Usa BX, SI o DI</td></tr>
+      <tr><td><code>JL</code> / <code>JG</code> con letras</td><td>Compara con signo: falla con bytes ≥ 80h</td><td><code>JB</code> / <code>JA</code></td></tr>
+      <tr><td>Confundir <code>12</code>, <code>12h</code> y <code>12o</code></td><td>Son 12, 18 y 10</td><td>Mira el sufijo</td></tr>
+      <tr><td>Escribir la palabra “al derecho” en memoria</td><td>AX = 1DCCh no queda 1D CC</td><td>Queda <b>CC 1D</b> (little endian)</td></tr>
+      <tr><td>No reiniciar contadores al repetir</td><td>Se suman los de la vuelta anterior</td><td>Paso 0: <code>MOV CANT_x, 0</code> en INICIO_PROGRAMA</td></tr>
+    </tbody></table></div>
+</section>
+
+<!-- ======================= T · TRAZAS ======================= -->
+<section id="trazas" class="topic" data-sec="tr">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Práctica en papel</p><h2>Traza de registros</h2></div><button class="mark-btn" data-mark="tr" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Como en la hoja de actividades: te dan el estado inicial y una lista de instrucciones, y llenas lo que se pide. Hazlo <b>primero en papel</b> y luego escribe las respuestas para revisarlas. Acepta <code>3500</code>, <code>3500h</code> o <code>0x3500</code> en hex; <code>−38</code> o <code>-38</code> con signo; binario con o sin espacios.</p>
+  <ol class="steps small">
+    <li><b>Copia el estado inicial</b> en una tabla con una columna por registro.</li>
+    <li><b>Por cada instrucción, escribe solo lo que cambia</b> (el destino, y los implícitos: MUL/DIV tocan AX y DX, PUSH/POP tocan SP, LOOP toca CX).</li>
+    <li><b>Mitades:</b> si cambia CH, CX cambia en su byte alto; CL queda igual.</li>
+    <li><b>Memoria:</b> calcula la física y anota los bytes (palabra = byte bajo primero).</li>
+  </ol>
+  <div id="trazasApp"></div>
+  <noscript><p class="errmsg">Las trazas necesitan JavaScript.</p></noscript>
+</section>
+
+<!-- ======================= D · DIRECCIONES ======================= -->
+<section id="dir-ej" class="topic" data-sec="dj">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Práctica en papel</p><h2>Direcciones físicas</h2></div><button class="mark-btn" data-mark="dj" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Con esta tabla del profe (la misma de la imagen), identifica el modo de direccionamiento y calcula la dirección física de cada instrucción. Si no hay memoria (registro o inmediato), deja la dirección vacía o escribe “—”.</p>
+  <div data-profe='{"regs":{"RAX":"1000","RBX":"0020","RCX":"0004","RDX":"0002","RSI":"0100","RDI":"0200","R8":"0050","RIP":"4000","CS":"0700","SS":"3000","ES":"5000","DS":"8000"},"left":["RAX","RBX","RCX","RDX","RSI","RDI","R8","RIP"]}'></div>
+  <div id="dirEj"></div>
+</section>
+
+<!-- ======================= B · BANCO ======================= -->
+<section id="banco" class="topic" data-sec="bk">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Programar</p><h2>Banco de 21 ejercicios</h2></div><button class="mark-btn" data-mark="bk" aria-pressed="false">Marcar como repasado</button></div>
+  <p>De fácil a nivel parcial, con las plantillas y el estilo del profe. Cada ejercicio te da <b>la plantilla con los datos ya declarados</b> y tú escribes los bloques, usando exactamente los nombres de variables, etiquetas y registros que se indican.</p>
+  <div class="grid g3">
+    <div class="card tile"><span class="tag">1 · SIMILITUD ≥ 95%</span><p class="small">Se compara tu código con la solución “en plano”, después de normalizar: mayúsculas, espacios, comentarios, <code>09h</code> = <code>9</code>, <code>'0'</code> = <code>30h</code>, <code>LEA</code> = <code>MOV OFFSET</code>, <code>JZ</code> = <code>JE</code>, el orden de instrucciones independientes y nombres de etiquetas equivalentes.</p></div>
+    <div class="card tile"><span class="tag">2 · SIN ERRORES LÓGICOS</span><p class="small">Tu programa se ejecuta en el simulador con varias entradas de teclado y la pantalla (texto y colores) debe quedar igual que con la solución. También detecta errores de sintaxis, divisiones desbordadas y ciclos infinitos.</p></div>
+    <div class="card tile"><span class="tag">3 · AYUDAS</span><p class="small">💡 Pistas progresivas por bloque (idea → instrucciones → esqueleto) y 👀 la solución por bloque o completa. Si miras la solución, el intento queda marcado “con ayuda”.</p></div>
+  </div>
+  <div class="assoc-bar banco-bar">
+    <span class="score" id="bancoResumen"></span><span class="spacer"></span>
+    <div class="assoc-tabs" id="bancoFiltro" role="tablist" aria-label="Filtrar por nivel">
+      <button type="button" role="tab" data-n="0" aria-selected="true">Todos</button>
+      <button type="button" role="tab" data-n="1" aria-selected="false">1 Fácil</button>
+      <button type="button" role="tab" data-n="2" aria-selected="false">2 Básico</button>
+      <button type="button" role="tab" data-n="3" aria-selected="false">3 Intermedio</button>
+      <button type="button" role="tab" data-n="4" aria-selected="false">4 Avanzado</button>
+      <button type="button" role="tab" data-n="5" aria-selected="false">5 Parcial</button>
+    </div>
+  </div>
+  <div class="reto-app" id="bancoApp">
+    <div class="reto-list" id="bancoList"></div>
+    <div class="reto-panel" id="bancoPanel" hidden></div>
+  </div>
+  <noscript><p class="errmsg">El banco necesita JavaScript.</p></noscript>
+</section>
+
+<!-- ======================= Q · QUIZ ======================= -->
+<section id="quiz" class="topic" data-sec="qz">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Repaso</p><h2>Preguntas directas</h2></div><button class="mark-btn" data-mark="qz" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">Elige una opción: se marca al instante y aparece la explicación. Filtra por tema con las pestañas.</p>
+  <div id="quizApp"></div>
+</section>
+
+<!-- ======================= A · ABIERTAS ======================= -->
+<section id="abiertas" class="topic" data-sec="ab">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Repaso</p><h2>Preguntas abiertas</h2></div><button class="mark-btn" data-mark="ab" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">Escribe tu respuesta como en el examen (se guarda en este navegador), luego abre la respuesta modelo y marca qué puntos mencionaste.</p>
+  <div id="abiertasApp"></div>
+</section>
+
+<!-- ======================= S · SIMULADOR ======================= -->
+<section id="simulador" class="topic" data-sec="sim">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Herramienta</p><h2>Simulador libre</h2></div><button class="mark-btn" data-mark="sim" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Un EMU8086 de bolsillo para verificar tus trazas a mano: pega cualquier programa del curso (org 100h o .MODEL SMALL), escribe lo que teclearía el usuario y ejecútalo paso a paso o completo. Soporta las instrucciones del curso, INT 21h (01h, 02h, 09h, 0Ah, 4Ch) e INT 10h (00h, 02h, 03h, 09h).</p>
+  <div class="key warn"><b>Es una aproximación</b><p class="small">Los valores de registros, memoria y pantalla coinciden con EMU8086 para lo que se usa en el curso. Lo que puede variar es la dirección exacta del código (IP) y dónde queda cada segmento en un .EXE: por eso aquí se muestra la línea en lugar de IP.</p></div>
+  <script type="text/x-asm" id="src-actividades">
+; Hoja de Actividades - Parte 2 y 3 (valores consistentes)
+; Programa .COM: los datos van en el segmento de codigo
+org 100h
+jmp inicio
+NUMERO1  DB 75
+NUMERO2  DB 0A8h
+ARREGLO1 DB 11h, 22h, 33h, 44h, 55h
+ARREGLO2 DB 12 DUP(0)
+
+inicio:
+   ; Parte 1: asignacion de segmentos
+   MOV AX, 0A000h
+   MOV SS, AX
+   MOV AX, 8000h
+   MOV ES, AX
+   MOV AX, 3000h
+   MOV DS, AX
+   ; Parte 2: manipulacion de datos
+   MOV CX, AX
+   ADD CH, 25h
+   MOV DI, 1
+   MOV [DI], CH
+   INC DI
+   PUSH CX
+   MOV DX, 1234H
+   MOV SI, 12o
+   SUB AX, DX
+   MOV ES:[SI], AX
+   MOV BL, 26h
+   NEG BL
+   MOV BX, 26h
+   NEG BX
+   NEG BX
+   MOV AX, 3516H
+   PUSH AX
+   MOV AX, 205H
+   MOV CL, 10
+   MUL BL
+   MOV [DI], AL
+   MOV [DI+1], AH
+   MUL BX
+   MOV [SI], AX
+   POP AX
+   ; Parte 3: donde estan los datos
+   MOV BX, OFFSET NUMERO1
+   MOV AH, CS:[BX]
+   MOV [00H], AH
+   MOV AL, CS:[BX+01H]
+   MOV [01H], AL
+   MOV SI, 0AH
+   MOV DI, OFFSET ARREGLO1
+   MOV BL, CS:[DI]
+   MOV [SI], BL
+   INC DI
+   DEC SI
+   MOV BL, CS:[DI]
+   MOV [SI], BL
+   INC DI
+   DEC SI
+   MOV BL, CS:[DI]
+   MOV [SI], BL
+   INC DI
+   DEC SI
+   MOV BL, CS:[DI]
+   MOV [SI], BL
+   INC DI
+   DEC SI
+   MOV BL, CS:[DI]
+   MOV [SI], BL
+   INC DI
+   DEC SI
+   ret</script>
+  <div id="sandbox"></div>
+</section>
+
+<footer>
+  <p>Fuentes: Hoja de Actividades – Parte 2 (y su versión anotada) · Laboratorio #2 · Laboratorios 4, 5, 6 y 8 · laboratorio de NEG / complemento a 2 · 2.º examen práctico (clasificador de caracteres, plantilla para EMU8086) · tabla de modos de direccionamiento (Brey) · tabla de registros del profesor (RAX … RIP, CS, SS, ES, DS). Universidad Mariano Gálvez · Arquitectura de Computadoras II.</p>
+  <p>Insignias: <span class="badge ded">deducido</span> inferido de los documentos, no dicho por el profesor · <span class="badge">386+</span> no existe en el 8086.</p>
+  <p class="credit">Desarrollado por Oskar · <span>@migit</span></p>
+</footer>
+</main>
+</div>
+
+<div class="fab-dock">
+  <button class="board-fab" id="inkFab" type="button" aria-controls="inkBar" aria-expanded="false" title="Anotar sobre la página (el stylus siempre dibuja)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg><span>Anotar</span>
+  </button>
+  <button class="board-fab" id="boardFab" type="button" aria-controls="board" aria-expanded="false" title="Mostrar u ocultar la pizarra">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Pizarra</span>
+  </button>
+</div>
+<section class="board" id="board" hidden aria-label="Pizarra de borrador">
+  <div class="board-bar" id="boardBar">
+    <span class="board-title"><span class="grip" aria-hidden="true">⋮⋮</span>Pizarra</span>
+    <span class="spacer"></span>
+    <label class="sr-only" for="boardBg">Fondo</label>
+    <select id="boardBg" title="Fondo">
+      <option value="plain">Liso</option>
+      <option value="grid">Cuadrícula</option>
+    </select>
+    <button class="bd-btn" id="boardHide" type="button" title="Ocultar (se conserva el dibujo)" aria-label="Ocultar pizarra"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+  </div>
+  <div class="board-tools" role="toolbar" aria-label="Herramientas de la pizarra">
+    <button class="bd-btn" type="button" data-tool="pen" aria-pressed="true" title="Lápiz (P)" aria-label="Lápiz"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+    <button class="bd-btn" type="button" data-tool="eraser" aria-pressed="false" title="Borrador (E)" aria-label="Borrador"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L11 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></button>
+    <span class="board-sep"></span>
+    <button class="bd-btn" type="button" data-color="--text" aria-pressed="true" title="Tinta" aria-label="Color tinta"><span class="bd-sw" style="--sw:var(--text)"></span></button>
+    <button class="bd-btn" type="button" data-color="--accent" aria-pressed="false" title="Azul" aria-label="Color azul"><span class="bd-sw" style="--sw:var(--accent)"></span></button>
+    <button class="bd-btn" type="button" data-color="--err" aria-pressed="false" title="Rojo" aria-label="Color rojo"><span class="bd-sw" style="--sw:var(--err)"></span></button>
+    <button class="bd-btn" type="button" data-color="--ok" aria-pressed="false" title="Verde" aria-label="Color verde"><span class="bd-sw" style="--sw:var(--ok)"></span></button>
+    <span class="board-sep"></span>
+    <button class="bd-btn" type="button" data-size="5" aria-pressed="false" title="Fino" aria-label="Trazo fino"><span class="bd-dot" style="width:4px;height:4px"></span></button>
+    <button class="bd-btn" type="button" data-size="8" aria-pressed="true" title="Medio" aria-label="Trazo medio"><span class="bd-dot" style="width:7px;height:7px"></span></button>
+    <button class="bd-btn" type="button" data-size="14" aria-pressed="false" title="Grueso" aria-label="Trazo grueso"><span class="bd-dot" style="width:11px;height:11px"></span></button>
+    <span class="bd-group">
+      <button class="bd-btn" type="button" id="boardUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+      <button class="bd-btn" type="button" id="boardRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+      <button class="bd-btn danger" type="button" id="boardClear" title="Borrar todo" aria-label="Borrar todo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </span>
+  </div>
+  <div class="board-area" id="boardArea">
+    <canvas id="boardBase"></canvas>
+    <canvas id="boardLive"></canvas>
+    <div class="board-eraser" id="boardEraser"></div>
+  </div>
+  <div class="board-resize" id="boardResize" title="Redimensionar" aria-hidden="true"></div>
+</section>
+
+<script src="../../js/asm8086.js"></script>
+<script src="../../js/arqui2-datos.js"></script>
+<script src="../../js/main.js"></script>
+<script src="../../js/arqui2.js"></script>
+</body>
+</html>
