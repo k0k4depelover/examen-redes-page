@@ -87,5 +87,32 @@ window.CURSOS = [
         proximamente: true
       }
     ]
+  },
+  {
+    id: 'desarrollo-web',
+    nombre: 'Desarrollo Web',
+    detalle: 'Universidad Mariano Gálvez · 2026',
+    examenes: [
+      {
+        id: 'desarrollo-web/parcial-1',
+        titulo: 'Parcial I',
+        etiqueta: 'PRIMERA PARTE',
+        descripcion: 'Guía del primer parcial.',
+        proximamente: true
+      },
+      {
+        id: 'desarrollo-web/parcial-2',
+        titulo: 'Parcial II',
+        etiqueta: 'FETCH · PLANTILLAS · CASO INTEGRAL',
+        descripcion: 'Consumir APIs con fetch y plantillas con escape, repaso de las clases 1–8, JavaScript, PHP y XSS, y el caso integral PHP + MySQL del profesor. Incluye servidor simulado, laboratorio de peticiones, 14 pruebas manuales, 8 ejercicios de fetch que se corrigen solos y diagnóstico de 14 hallazgos.'
+      },
+      {
+        id: 'desarrollo-web/final',
+        titulo: 'Examen final',
+        etiqueta: 'TODO EL CURSO',
+        descripcion: 'Repaso integral del curso.',
+        proximamente: true
+      }
+    ]
   }
 ];

@@ -26,8 +26,8 @@ C:.
 |           index.html              Arquitectura II (ensamblador 8086)                · usa asm8086.js, arqui2-datos.js, arqui2.js
 +---redes-1\parcial-2
 |           index.html              Redes I (TCP/IP, Hamming, Viterbi)                · todo en main.js
-+---desarrollo-web\parcial-2        (EN CONSTRUCCIÓN, ver "Plan Desarrollo Web")
-|           index.html
++---desarrollo-web\parcial-2
+|           index.html              Desarrollo Web (fetch, plantillas, caso integral) · usa web2-api.js, web2-datos.js, web2.js
 |
 +---css
 |       styles.css                  ÚNICA hoja de estilos (tokens, componentes, una sección por guía al final)
@@ -42,6 +42,9 @@ C:.
         asm8086.js                  Motor 8086: ensamblador, simulador, comparador de código (window.ASM). Sirve en Node
         arqui2-datos.js             Datos de Arquitectura II: banco de 21 ejercicios, trazas, quiz, abiertas (window.ARQ)
         arqui2.js                   UI de Arquitectura II: simulador paso a paso, trazas, banco, direcciones
+        web2-api.js                 Servidor simulado del caso integral (modo original/corregido) + 14 pruebas. Sirve en Node
+        web2-datos.js               Desarrollo Web: 8 ejercicios de fetch (con pruebas), diagnóstico, quiz, abiertas. Sirve en Node
+        web2.js                     UI de Desarrollo Web: laboratorio, matriz de pruebas, demo de escape, ejercicios en Worker
 ```
 
 Regenera el árbol con `cmd /c "tree /f /a"` (Windows) cuando cambie la estructura.
@@ -89,7 +92,7 @@ Regenera el árbol con `cmd /c "tree /f /a"` (Windows) cuando cambie la estructu
 - Los archivos temporales van a `$CLAUDE_JOB_DIR/tmp` o al scratchpad, **nunca** dentro del repo.
 - Si el sistema detiene el servidor local por memoria, no lo reinicies solo; usa `file://`.
 
-## Plan Desarrollo Web · Parcial II (en construcción)
+## Desarrollo Web · Parcial II (implementada)
 Fuentes: 12 PPTX del Ing. Leonel Domínguez (convertidos con `markitdown`, **obligatorio** para no gastar tokens) y el repo
 `donaldosorio/Examen-Desarrollo-Web` (un laboratorio PHP+MySQL "caso-integral" con 8 pistas y README con entregables).
 Foco pedido: **consumir APIs (fetch) y plantillas**; práctico.

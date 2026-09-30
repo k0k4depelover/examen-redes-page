@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desarrollo Web · Parcial II</title>
+<meta name="description" content="Guía práctica del Parcial II de Desarrollo Web: consumir APIs con fetch y plantillas (con escape), repaso de las clases 1–8 y el caso integral PHP + MySQL del profesor. Servidor simulado en el navegador, laboratorio de peticiones, 14 pruebas manuales, 8 ejercicios de fetch que se corrigen solos y diagnóstico de 14 hallazgos.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="../../img/logo.svg">
+<link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body data-exam="desarrollo-web/parcial-2" data-store="web2-done">
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Abrir índice" aria-expanded="false" aria-controls="side">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+  <a class="back-btn" href="../../index.html" aria-label="Volver a todos los exámenes">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span>Exámenes</span>
+  </a>
+  <div class="brand">Desarrollo Web <span>· Guía Parcial II</span></div>
+  <div class="spacer"></div>
+  <div class="progress-pill" id="progress" aria-live="polite">0 de 0 repasados</div>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+<nav class="side" id="side" aria-label="Índice">
+  <a class="side-back" href="../../index.html"><span class="n">←</span>Todos los exámenes</a>
+  <h4>Inicio</h4>
+  <a href="#inicio"><span class="n">00</span>Cómo usar esta guía</a>
+  <a href="#hoja"><span class="n">★</span>Hoja de referencia rápida</a>
+  <h4>Repaso de las clases</h4>
+  <a href="#web" data-sec="w1"><span class="n">W1</span>La web, HTTP y DNS<span class="done"></span></a>
+  <a href="#htmlcss" data-sec="w2"><span class="n">W2</span>HTML y CSS<span class="done"></span></a>
+  <a href="#js" data-sec="w3"><span class="n">W3</span>JavaScript y DOM<span class="done"></span></a>
+  <a href="#php" data-sec="w4"><span class="n">W4</span>PHP y APIs<span class="done"></span></a>
+  <a href="#xss" data-sec="w5"><span class="n">W5</span>XSS y CSP<span class="done"></span></a>
+  <h4>Consumir APIs y plantillas</h4>
+  <a href="#fetch" data-sec="a1"><span class="n">A1</span>fetch paso a paso<span class="done"></span></a>
+  <a href="#lab" data-sec="a2"><span class="n">A2</span>Laboratorio de peticiones<span class="done"></span></a>
+  <a href="#plantillas" data-sec="a3"><span class="n">A3</span>Plantillas y escape<span class="done"></span></a>
+  <a href="#ejercicios" data-sec="a4"><span class="n">A4</span>8 ejercicios de fetch<span class="done"></span></a>
+  <h4>El caso integral del profe</h4>
+  <a href="#caso" data-sec="c1"><span class="n">C1</span>Mapa del caso<span class="done"></span></a>
+  <a href="#diag" data-sec="c2"><span class="n">C2</span>Diagnóstico: 14 hallazgos<span class="done"></span></a>
+  <a href="#pruebas" data-sec="c3"><span class="n">C3</span>14 pruebas manuales<span class="done"></span></a>
+  <a href="#refactor" data-sec="c4"><span class="n">C4</span>Versión corregida<span class="done"></span></a>
+  <h4>Repaso</h4>
+  <a href="#quiz" data-sec="qz"><span class="n">Q</span>Preguntas directas<span class="done"></span></a>
+  <a href="#abiertas" data-sec="ab"><span class="n">A</span>Preguntas abiertas<span class="done"></span></a>
+</nav>
+<main id="main">
+
+<section id="inicio" class="hero">
+  <p class="eyebrow">Universidad Mariano Gálvez · Desarrollo Web · Parcial II</p>
+  <h1>Consumir APIs y plantillas,<br>sin creerle al navegador.</h1>
+  <p class="lede">Una guía práctica: repaso de las 12 presentaciones del Ing. Leonel Domínguez y, sobre todo, cómo <b>pedir datos con <code>fetch</code></b>, <b>pintarlos con plantillas sin abrir un hueco XSS</b> y analizar el laboratorio del profe (un portal PHP + MySQL con fallos a propósito). Todo corre aquí: un servidor simulado hace de PHP y puedes romperlo y arreglarlo sin instalar nada.</p>
+
+  <h3>Plan de estudio sugerido</h3>
+  <div class="grid g3 toc-grid">
+    <a class="card" href="#web"><span class="n">BLOQUE 1 · REPASO</span><h4>Las clases 1–8 y JS, PHP, XSS</h4><p>Lo esencial de cada presentación, en una pantalla por tema.</p></a>
+    <a class="card" href="#fetch"><span class="n">BLOQUE 2 · PRÁCTICA</span><h4>fetch y plantillas</h4><p>Laboratorio de peticiones, demo de escape y 8 ejercicios que se corrigen solos.</p></a>
+    <a class="card" href="#caso"><span class="n">BLOQUE 3 · CASO INTEGRAL</span><h4>El laboratorio del profe</h4><p>Diagnóstico de 14 hallazgos, 14 pruebas manuales y la versión corregida.</p></a>
+  </div>
+
+  <div class="key warn"><b>Qué es del profe y qué es deducido <span class="badge ded">deducido</span></b>
+    <ul class="small">
+      <li><b>Del profe:</b> las 12 presentaciones y el repositorio <code>donaldosorio/Examen-Desarrollo-Web</code> (README con entregables y 8 pistas).</li>
+      <li><b>Pedido por ti:</b> enfocarse en consumir APIs y plantillas, de forma práctica.</li>
+      <li><b>Deducido:</b> el formato del examen (no está escrito en ningún documento), las fechas de las clases del 20/08, 01/09, 08/09 y 22/09 (salen del nombre de los archivos <code>2008</code>, <code>0109</code>, <code>0809</code> y <code>2209</code>) y las reglas del simulador para recursos en borrador, <code>visible = 0</code> y el rol <code>admin</code> en la versión corregida.</li>
+      <li><b>El servidor es un simulador.</b> Reproduce las reglas del PHP del profe, pero las contraseñas son inventadas (el SQL solo trae hashes) y las respuestas son JSON en ambos modos.</li>
+    </ul>
+  </div>
+
+  <h3>Cómo usar esta guía</h3>
+  <ol class="steps">
+    <li><b>Repasa las clases (W1–W5)</b> y marca cada una. Son cortas a propósito.</li>
+    <li><b>Abre el laboratorio (A2)</b> en modo <i>original</i>: entra como Ana, pide el recurso 2 y cambia la contraseña de Bruno. Luego repite en modo <i>corregido</i> y compara la traza.</li>
+    <li><b>Haz los 8 ejercicios (A4)</b>. Escribe la función, pulsa <b>Ejecutar pruebas</b>; se corrige por comportamiento, no por parecido.</li>
+    <li><b>Recorre el caso integral (C1–C4):</b> entiende cada hallazgo, ejecuta las 14 pruebas y compara con la versión corregida.</li>
+    <li><b>Cierra con el cuestionario y las abiertas.</b> Tienes el lápiz (Anotar) y la pizarra para dibujar el flujo de memoria.</li>
+  </ol>
+</section>
+
+<!-- ======================= HOJA ======================= -->
+<section id="hoja" class="topic">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Para repasar 5 minutos antes</p><h2>Hoja de referencia rápida</h2></div></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">MÉTODOS Y CÓDIGOS HTTP</span>
+      <ul class="small">
+        <li><b>GET</b> leer · <b>POST</b> crear/enviar · <b>PUT</b> reemplazar · <b>PATCH</b> modificar parte · <b>DELETE</b> borrar · <b>OPTIONS</b> qué se permite.</li>
+        <li><b>200</b> OK · <b>201</b> creado · <b>400</b> petición mala · <b>401</b> sin sesión · <b>403</b> sin permiso · <b>404</b> no existe · <b>422</b> datos inválidos · <b>500</b> fallo del servidor · <b>503</b> no disponible.</li>
+        <li>Request = método + URL + headers + body (opcional). Response = código + headers + body.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">fetch EN 5 LÍNEAS</span>
+<pre class="code" data-lang="js">const r = await fetch('/api/x', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ a: 1 })
+});
+if (!r.ok) throw new Error('HTTP ' + r.status);
+const datos = await r.json();</pre>
+      <p class="small">Un 404 <b>no</b> rechaza la promesa. Solo un fallo de red.</p></div>
+    <div class="card tile"><span class="tag">PLANTILLAS Y ESCAPE</span>
+      <ul class="small">
+        <li>Plantilla = HTML con huecos <code>{{dato}}</code>.</li>
+        <li>Datos de fuera (API, usuario) → <b>escapar</b>: <code>&amp; → &amp;amp;</code> · <code>&lt; → &amp;lt;</code> · <code>&gt; → &amp;gt;</code> · <code>" → &amp;quot;</code>.</li>
+        <li>Insertar con <code>textContent</code>; <code>innerHTML</code> solo con HTML que tú controlas.</li>
+        <li>Se escapa el <b>dato</b>, no la plantilla; y al <b>mostrar</b>, no al guardar.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">NO CREER AL CLIENTE</span>
+      <ul class="small">
+        <li>URL, formulario, JSON, cookies editables: <b>datos de solicitud</b>, no pruebas.</li>
+        <li>Identidad → sesión. Cuenta activa, rol, recurso, dueño, accesos → base de datos.</li>
+        <li>El cliente mejora la experiencia; el servidor <b>repite</b> las validaciones críticas.</li>
+        <li>Consultas con parámetros. Contraseñas con <code>password_hash</code> / <code>password_verify</code>.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">ORDEN DE UN LOGIN</span>
+      <ol class="small"><li>¿método esperado (POST)?</li><li>¿campos presentes y con formato?</li><li>¿la cuenta existe?</li><li><code>password_verify</code></li><li>¿cuenta activa?</li><li><code>session_regenerate_id(true)</code></li></ol>
+      <p class="small">Fallo → mensaje general (no enumerar correos).</p></div>
+    <div class="card tile"><span class="tag">XSS Y CSP</span>
+      <ul class="small">
+        <li><b>Almacenado</b> (queda en la BD) · <b>Reflejado</b> (URL/formulario) · <b>DOM</b> (solo en el cliente).</li>
+        <li>CSP: cabecera <code>Content-Security-Policy: default-src 'self'</code> = solo mi mismo origen. <code>*.trusted.com</code> añade ese dominio y subdominios.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">CSS Y RESPONSIVE</span>
+      <ul class="small">
+        <li>Caja: content → padding → border → margin.</li>
+        <li>Flexbox = 1 dimensión · Grid = 2 (<code>repeat(3, 1fr)</code>).</li>
+        <li><code>@media (max-width: 768px)</code> = hasta 768 · <code>min-width</code> = desde. Mobile First.</li>
+        <li>Celular hasta 767 · tablet 768–1023 · escritorio 1024+.</li>
+      </ul></div>
+    <div class="card tile"><span class="tag">JAVASCRIPT</span>
+      <ul class="small">
+        <li><code>const</code>/<code>let</code> (bloque) sobre <code>var</code> (función). <code>===</code> estricto.</li>
+        <li><code>getElementById</code> · <code>querySelector</code> (primero) · <code>querySelectorAll</code> (todos).</li>
+        <li><code>addEventListener('submit', e =&gt; { e.preventDefault(); … })</code>. Cuidado con <code>scroll</code> y <code>mousemove</code>.</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ======================= W1 ======================= -->
+<section id="web" class="topic" data-sec="w1">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · Repaso · Clases 1 y 2</p><h2>W1 · La web, HTTP y DNS</h2></div><button class="mark-btn" data-mark="w1" aria-pressed="false">Marcar como repasado</button></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">APLICACIÓN WEB</span><p class="small">Software que se usa desde el navegador, sin instalarlo. Un <b>sitio</b> informa; una <b>aplicación</b> hace: inicia sesión, gestiona datos, contenido dinámico.</p></div>
+    <div class="card tile"><span class="tag">FRONTEND · BACKEND</span><p class="small"><b>Frontend</b>: lo visible, corre en el navegador (HTML, CSS, JS). <b>Backend</b>: corre en el servidor, procesa la lógica, guarda datos y responde al frontend.</p></div>
+    <div class="card tile"><span class="tag">INTERNET · IP · DNS</span><p class="small">Millones de computadoras con una <b>dirección IP</b>. El <b>DNS</b> es la agenda: traduce <code>google.com</code> a su IP. Un <b>dominio</b> es jerárquico: en <code>www.umg.edu.gt</code>, <code>.gt</code> es el territorial, <code>edu</code> el tipo e <code>umg</code> la organización.</p></div>
+    <div class="card tile"><span class="tag">HTTP vs HTTPS</span><p class="small">HTTP transfiere hipertexto. HTTPS lo hace cifrando y validando con claves criptográficas (TLS). Por eso se prueba <code>https://google.com</code> contra <code>http://neverssl.com</code>.</p></div>
+  </div>
+  <h3>Request y response</h3>
+  <div class="tbl-wrap"><table><thead><tr><th></th><th>Request (cliente → servidor)</th><th>Response (servidor → cliente)</th></tr></thead><tbody>
+    <tr><td><b>Primera línea</b></td><td>Método + URL (<code>GET /recurso?id=1</code>)</td><td>Código de estado (<code>200 OK</code>, <code>404 Not Found</code>)</td></tr>
+    <tr><td><b>Headers</b></td><td>Tipo de contenido, navegador, cookie de sesión…</td><td>Tipo de contenido, fecha, <code>Set-Cookie</code>, CSP…</td></tr>
+    <tr><td><b>Body</b></td><td>Opcional (POST/PUT): formulario o JSON</td><td>HTML, JSON, una imagen…</td></tr></tbody></table></div>
+  <div class="key"><b>Tarea de la clase 2 (DevTools → Network)</b><p class="small">Cuántas solicitudes hace la página, cuál es la primera, qué método y código tiene la principal, si usa HTTP o HTTPS, qué tipos de recursos baja, y qué pasa si cambias el título en Elements y recargas (se pierde: el DOM se reconstruye del HTML del servidor).</p></div>
+</section>
+
+<!-- ======================= W2 ======================= -->
+<section id="htmlcss" class="topic" data-sec="w2">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · Repaso · Clases 3 a 8</p><h2>W2 · HTML y CSS</h2></div><button class="mark-btn" data-mark="w2" aria-pressed="false">Marcar como repasado</button></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">ESTRUCTURA HTML</span><p class="small">HTML marca y estructura; no tiene lógica. <code>&lt;html&gt;</code> es la raíz con <code>&lt;head&gt;</code> (metadatos, <code>&lt;title&gt;</code>, <code>&lt;link&gt;</code> al CSS) y <code>&lt;body&gt;</code> (lo visible). Las etiquetas correctas dan accesibilidad, mantenimiento y SEO.</p></div>
+    <div class="card tile"><span class="tag">HTML SEMÁNTICO</span><p class="small"><code>header</code> encabezado · <code>nav</code> navegación · <code>main</code> contenido principal (uno solo) · <code>section</code> tema · <code>article</code> contenido independiente · <code>aside</code> complemento · <code>footer</code> pie.</p></div>
+    <div class="card tile"><span class="tag">SEO</span><p class="small"><code>&lt;meta name="description" content="…"&gt;</code> (~150 caracteres; no posiciona directo, pero informa). <b>Open Graph</b> controla cómo se ve el enlace al compartirlo: <code>og:title</code>, <code>og:description</code>, <code>og:image</code>, <code>og:url</code>, <code>og:type</code>, <code>og:site_name</code>, <code>og:locale</code>.</p></div>
+    <div class="card tile"><span class="tag">ACCESIBILIDAD · WCAG</span><p class="small">Cuatro principios: <b>perceptible, operable, comprensible, robusto</b>. <code>&lt;label for="nombre"&gt;</code> enlaza el texto con <code>&lt;input id="nombre"&gt;</code>. <code>aria-label</code> da nombre a botones de solo ícono.</p></div>
+    <div class="card tile"><span class="tag">FORMULARIOS</span><p class="small"><code>form</code>, <code>label</code>, <code>input</code>, <code>textarea</code>, <code>select</code>/<code>option</code>, <code>button</code>. Atributos: <code>action</code> (URL destino), <code>method</code> (post/get), <code>target</code>, <code>name</code>. <b>No se confía en el HTML:</b> el servidor valida otra vez.</p></div>
+    <div class="card tile"><span class="tag">CASCADA</span><p class="small">El navegador decide qué regla gana por: <b>origen</b> (navegador, usuario, desarrollador), <b>especificidad</b> del selector y <b>orden</b>. Error común: <code>href="style.css"</code> cuando el archivo es <code>styles.css</code>.</p></div>
+  </div>
+  <h3>Modelo de cajas y layout</h3>
+<div class="codebox"><div class="file">styles.css</div><pre class="code" data-lang="css">.card   { margin: 32px; padding: 32px; border: 1px solid #111827; border-radius: 15px; }
+#proyectos { margin: 48px 0 0 0; }          /* solo arriba */
+.navbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.projects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.featured { grid-column: span 2; }          /* 1fr = una fracción del espacio */
+.contenedor { display: flex; gap: 20px; }
+@media (max-width: 768px) { .contenedor { flex-direction: column; } }</pre></div>
+  <div class="key"><b>Margin vs padding</b><p class="small">Margin = espacio <u>exterior</u> (separa de los demás). Padding = espacio <u>interior</u> (evita que el texto toque el borde). Usa <code>min-height</code> y no <code>height</code> fijo si el contenido puede crecer; <code>width</code> con <code>max-width</code>. Tarea de la clase 7: conocer <code>em</code>, <code>rem</code>, <code>px</code>, <code>vh</code>, <code>vw</code>, <code>dvh</code>, <code>%</code>.</p></div>
+  <div class="key ok"><b>Responsive ≠ zoom</b><p class="small">Es <b>reorganizar</b> el contenido. <b>Mobile First</b>: primero celular, luego estilos para pantallas mayores. Breakpoints: celular hasta 767 px · tablet 768–1023 px · escritorio desde 1024 px.</p></div>
+</section>
+
+<!-- ======================= W3 ======================= -->
+<section id="js" class="topic" data-sec="w3">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · Repaso · 20/08 y 01/09 <span class="badge ded">fechas deducidas</span></p><h2>W3 · JavaScript y DOM</h2></div><button class="mark-btn" data-mark="w3" aria-pressed="false">Marcar como repasado</button></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">QUÉ ES</span><p class="small">Lenguaje que da comportamiento a la página. El <b>DOM</b> es el árbol de nodos que el navegador construye del HTML; JS lo consulta y lo modifica.</p></div>
+    <div class="card tile"><span class="tag">TIPOS Y VARIABLES</span><p class="small">string, number, boolean, undefined, null, object. <code>var</code> (alcance de función), <code>let</code> (bloque, cambia), <code>const</code> (bloque, no se reasigna). No se usa <code>var</code> salvo que el profe lo indique.</p></div>
+    <div class="card tile"><span class="tag">FUNCIÓN FLECHA</span><p class="small"><code>const sumar = (a, b) =&gt; a + b;</code> Forma compacta; se guarda en una constante.</p></div>
+    <div class="card tile"><span class="tag">OPERADORES</span><p class="small">Aritméticos, de asignación, de comparación (<code>===</code> estricto: <code>"1" === 1</code> es <code>false</code>) y lógicos (<code>&amp;&amp;</code>, <code>||</code>, <code>!</code>): <code>if (edad &gt;= 18 &amp;&amp; edad &lt; 65)</code>.</p></div>
+  </div>
+<div class="codebox"><div class="file">dom-y-eventos.js</div><pre class="code" data-lang="js">const titulo = document.getElementById('titulo');
+const todos = document.querySelectorAll('.mensaje');     // todos los que coinciden
+document.getElementById('boton').addEventListener('click', () => {
+  titulo.textContent = 'SE MODIFICÓ';                      // texto seguro
+});
+document.querySelector('#registro').addEventListener('submit', (event) => {
+  event.preventDefault();                                   // no recargar la página
+  console.log('Procesando formulario…');
+});
+
+const estudiante = { nombre: 'Carlos', edad: 22, saludar() { console.log('Hola, soy ' + this.nombre); } };
+estudiante.edad = 23; estudiante['correo'] = 'c@ejemplo.com'; estudiante.saludar();</pre></div>
+  <div class="key warn"><b>Preguntas que suele hacer la clase</b><ul class="small">
+    <li>Alcance: con <code>let</code>/<code>const</code> dentro del <code>if</code>, <code>console.log(mensaje)</code> fuera lanza error; con <code>var</code> imprime el valor.</li>
+    <li><b>Event listeners:</b> un <code>click</code> casi no pesa; <code>scroll</code>, <code>mousemove</code>, <code>pointermove</code>, <code>resize</code> se disparan muchísimo: que su función sea liviana. Quita listeners de componentes que se destruyen.</li>
+    <li><b>Clases:</b> plantilla para varios objetos parecidos (<code>Producto</code>, <code>Usuario</code>). Para un objeto único basta un literal.</li>
+    <li>Objetos: son claves y valores (propiedades y métodos); las respuestas de una API llegan como objetos.</li></ul></div>
+</section>
+
+<!-- ======================= W4 ======================= -->
+<section id="php" class="topic" data-sec="w4">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · Repaso · 08/09 <span class="badge ded">fecha deducida</span></p><h2>W4 · PHP y APIs</h2></div><button class="mark-btn" data-mark="w4" aria-pressed="false">Marcar como repasado</button></div>
+  <div class="grid g2">
+    <div class="card tile"><span class="tag">PHP</span><p class="small">Lenguaje de scripts de propósito general, pensado para la web. Se ejecuta en el <b>servidor</b>: el cliente solo recibe el resultado. También corre en línea de comandos (tareas con cron).</p></div>
+    <div class="card tile"><span class="tag">SESIONES</span><p class="small">Cada visitante recibe un identificador de sesión (cookie o URL). <code>session_start()</code> recupera el entorno y <code>$_SESSION</code> guarda datos entre peticiones.</p></div>
+    <div class="card tile"><span class="tag">API</span><p class="small">Mecanismo para que dos programas se hablen con definiciones y protocolos. Arquitectura <b>cliente–servidor</b>: quien pide es el cliente, quien responde es el servidor.</p></div>
+    <div class="card tile"><span class="tag">TIPOS DE API</span><p class="small"><b>SOAP</b> (XML, menos flexible) · <b>RPC</b> (llamar una función remota) · <b>WebSocket</b> (bidireccional, JSON) · <b>REST</b> (la más popular y flexible).</p></div>
+  </div>
+<div class="codebox"><div class="file">basico.php</div><pre class="code" data-lang="php">&lt;?php
+echo "Hola, mundo";
+if ($edad >= 18) { echo "Eres mayor de edad"; } else { echo "Eres menor de edad"; }
+for ($i = 0; $i &lt; 5; $i++) { echo $i; }
+$colores = array("rojo", "verde", "azul");
+foreach ($colores as $color) { echo $color; }</pre></div>
+  <p class="small muted">Formularios: <code>&lt;form action="login.php" method="post"&gt;</code> manda los campos a PHP, que los lee en <code>$_POST</code> (o <code>$_GET</code>). Son datos del cliente: se validan.</p>
+</section>
+
+<!-- ======================= W5 ======================= -->
+<section id="xss" class="topic" data-sec="w5">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 1 · Repaso · 22/09 <span class="badge ded">fecha deducida</span></p><h2>W5 · XSS y CSP</h2></div><button class="mark-btn" data-mark="w5" aria-pressed="false">Marcar como repasado</button></div>
+  <p><b>Idea clave:</b> XSS ocurre cuando la aplicación no valida ni codifica lo que escribe el usuario y se ejecuta JavaScript malicioso en el navegador de <i>otras</i> personas.</p>
+  <div class="grid g3">
+    <div class="card tile"><span class="tag">ALMACENADO</span><p class="small">El código queda en el servidor/BD y se ejecuta con cada visita (comentarios, publicaciones).</p></div>
+    <div class="card tile"><span class="tag">REFLEJADO</span><p class="small">Viaja en una URL o formulario y vuelve en la respuesta; se ejecuta cuando la víctima abre el enlace.</p></div>
+    <div class="card tile"><span class="tag">BASADO EN DOM</span><p class="small">Se ejecuta al modificar el DOM en el cliente; el servidor nunca lo guarda.</p></div>
+  </div>
+<div class="codebox"><div class="file">ejemplo-xss.html (el de la clase)</div><pre class="code" data-lang="js">boton.addEventListener('click', () => {
+  const comentario = input.value;
+  resultado.innerHTML = comentario;      // ✗ inyecta HTML: &lt;img src=x onerror=…&gt;
+  // resultado.textContent = comentario; // ✓ lo trata como texto
+});</pre></div>
+  <h3>Prevención y CSP</h3>
+  <ul><li>Validar y <b>codificar</b> lo que se ingresa; no mostrar contenido dinámico sin filtrar; usar librerías seguras.</li>
+    <li><b>CSP</b> (cabecera HTTP) le dice al navegador qué orígenes se permiten:</li></ul>
+  <div class="tbl-wrap"><table><thead><tr><th>Cabecera</th><th>Significa</th></tr></thead><tbody>
+    <tr><td><code>Content-Security-Policy: default-src 'self'</code></td><td>Todo del mismo origen del sitio (no subdominios).</td></tr>
+    <tr><td><code>… default-src 'self' *.trusted.com</code></td><td>Mi origen + un dominio de confianza y todos sus subdominios.</td></tr>
+    <tr><td><code>… default-src https://onlinebanking.jumbobank.com</code></td><td>Solo ese origen, por SSL (evita espiar las solicitudes).</td></tr></tbody></table></div>
+  <p class="small muted">La última diapositiva es un roadmap de ciberseguridad: redes, Linux, IoT, seguridad, ataques (phishing, fuerza bruta, SQL injection, XSS, MITM…) y práctica legal (TryHackMe, Hack The Box, Burp Suite, Nmap, DevTools). No es materia de examen directa <span class="badge ded">deducido</span>.</p>
+</section>
+
+<!-- ======================= A1 ======================= -->
+<section id="fetch" class="topic" data-sec="a1">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · Consumir APIs</p><h2>A1 · fetch paso a paso</h2></div><button class="mark-btn" data-mark="a1" aria-pressed="false">Marcar como repasado</button></div>
+  <p><b>Idea clave:</b> <code>fetch</code> es tu forma de hacer una <i>request</i> desde JavaScript sin recargar la página. Devuelve una <b>promesa</b> que se resuelve con la <i>response</i>; el cuerpo se lee con otra promesa (<code>.json()</code>).</p>
+  <figure>
+    <svg class="dg wide" viewBox="0 0 760 210" role="img" aria-label="Flujo de fetch: el formulario llama a JavaScript, que hace fetch al servidor PHP, que consulta la base de datos y devuelve JSON que JavaScript pinta con una plantilla">
+      <defs><marker id="f-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="ah"/></marker></defs>
+      <line class="ll" x1="458" y1="14" x2="458" y2="196"/>
+      <text class="sm mut" x="20" y="22">Navegador (NO confiable: el usuario lo controla)</text><text class="sm mut" x="470" y="22">Servidor (confiable)</text>
+      <rect class="nd-m" x="20" y="70" width="110" height="46" rx="10"/><text class="c b" x="75" y="98">Formulario</text>
+      <rect class="nd-c" x="165" y="70" width="130" height="46" rx="10"/><text class="c b mono sm" x="230" y="90">fetch(url, …)</text><text class="xs c mut" x="230" y="106">await</text>
+      <rect class="nd-v" x="490" y="70" width="110" height="46" rx="10"/><text class="c b" x="545" y="90">PHP</text><text class="xs c mut" x="545" y="106">sesión + reglas</text>
+      <rect class="nd-db" x="640" y="70" width="100" height="46" rx="10"/><text class="c b" x="690" y="98">MySQL</text>
+      <rect class="nd-x" x="165" y="140" width="130" height="46" rx="10"/><text class="c b sm" x="230" y="160">plantilla + esc()</text><text class="xs c mut" x="230" y="176">pinta el JSON</text>
+      <path class="ar" d="M130,93 H163" marker-end="url(#f-a)"/>
+      <path class="ar acc" d="M295,85 H488" marker-end="url(#f-a)"/><text class="xs mut" x="330" y="76">request (método, URL, headers, body)</text>
+      <path class="ar" d="M600,93 H638" marker-end="url(#f-a)"/>
+      <path class="ar acc" d="M488,108 H420 V163 H297" marker-end="url(#f-a)"/><text class="xs mut" x="312" y="132">response (status + JSON)</text>
+    </svg>
+    <figcaption>Todo lo que cruza la línea vertical puede haber sido manipulado. Lo que decide el servidor (identidad, rol, permisos) debe salir de la sesión y de la base de datos, no de lo que el cliente dice.</figcaption>
+  </figure>
+  <h3>Receta: pedir, comprobar, leer</h3>
+<div class="codebox"><div class="file">api.js</div><pre class="code" data-lang="js">async function pedirRecurso(id) {
+  try {
+    const r = await fetch('/recurso?id=' + encodeURIComponent(id));
+    if (r.status === 404) return null;              // un caso esperado
+    if (!r.ok) throw new Error('HTTP ' + r.status); // 4xx/5xx NO rechazan solos
+    const { resource } = await r.json();           // .json() también es una promesa
+    return resource;
+  } catch (error) {                                   // red caída, JSON roto, nuestro throw
+    console.error(error);
+    return null;
+  }
+}</pre></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Quiero…</th><th>Hago</th></tr></thead><tbody>
+    <tr><td>Enviar JSON</td><td><code>headers: {'Content-Type':'application/json'}</code> + <code>body: JSON.stringify(obj)</code></td></tr>
+    <tr><td>Saber si salió bien</td><td><code>respuesta.ok</code> (200–299) o <code>respuesta.status</code></td></tr>
+    <tr><td>Leer el cuerpo</td><td><code>await respuesta.json()</code> o <code>.text()</code> (solo una vez)</td></tr>
+    <tr><td>Varias peticiones a la vez</td><td><code>await Promise.all(ids.map(id =&gt; fetch(…)))</code></td></tr>
+    <tr><td>Parámetros en la URL</td><td><code>new URLSearchParams({ q: 'a b' })</code> o <code>encodeURIComponent</code></td></tr>
+    <tr><td>Mostrar un mensaje del servidor</td><td><code>elemento.textContent = datos.message</code> (nunca <code>innerHTML</code>)</td></tr></tbody></table></div>
+  <div class="key warn"><b>Errores que se ven en el examen</b><ul class="small">
+    <li>Creer que <code>catch</code> atrapa un 404 (no lo hace: revisa <code>ok</code>).</li>
+    <li>Olvidar <code>await</code> (te queda una promesa, no el dato) o mandar el objeto sin <code>JSON.stringify</code>.</li>
+    <li>Olvidar <code>event.preventDefault()</code> en el <code>submit</code>: la página se recarga y no llega la respuesta.</li>
+    <li>Mandar en el body datos que el servidor debe decidir (<code>user_id</code>, <code>rol</code>): ver el caso integral.</li></ul></div>
+</section>
+
+<!-- ======================= A2 ======================= -->
+<section id="lab" class="topic" data-sec="a2">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · Consumir APIs</p><h2>A2 · Laboratorio de peticiones</h2></div><button class="mark-btn" data-mark="a2" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">Un servidor simulado con las reglas del PHP del profe (<i>original</i>) y de la versión corregida. Entra con una cuenta, manipula la petición y mira el status y la <b>traza de decisiones</b>. Prueba esto: en el modo <i>original</i> entra como Ana, abre <b>"Ver el recurso de otra persona"</b> y <b>"Cambiar la contraseña de Bruno"</b>; luego repite en <i>corregido</i>.</p>
+  <div id="labApp"></div>
+</section>
+
+<!-- ======================= A3 ======================= -->
+<section id="plantillas" class="topic" data-sec="a3">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · Plantillas</p><h2>A3 · Plantillas y escape</h2></div><button class="mark-btn" data-mark="a3" aria-pressed="false">Marcar como repasado</button></div>
+  <p><b>Idea clave:</b> una plantilla convierte datos (JSON de una API) en HTML. El peligro es que los datos traen texto de otras personas: si se insertan como HTML, el navegador <i>ejecuta</i> lo que no debe. La defensa es tratarlos como <b>texto</b>.</p>
+<div class="codebox"><div class="file">plantillas.js</div><pre class="code" data-lang="js">const esc = s => String(s).replace(/[&amp;&lt;>"']/g, c =>
+  ({ '&amp;': '&amp;amp;', '&lt;': '&amp;lt;', '>': '&amp;gt;', '"': '&amp;quot;', "'": '&amp;#39;' }[c]));
+
+// ✗ inseguro: el dato se vuelve HTML
+lista.innerHTML = recursos.map(r => `&lt;li>${r.titulo}&lt;/li>`).join('');
+
+// ✓ plantilla con escape al insertar
+lista.innerHTML = recursos.map(r => `&lt;li>${esc(r.titulo)}&lt;/li>`).join('');
+
+// ✓ sin HTML: crear nodos y usar textContent
+const li = document.createElement('li'); li.textContent = r.titulo; lista.append(li);</pre></div>
+  <p class="small">En PHP es la misma idea: <code>htmlspecialchars($dato, ENT_QUOTES, 'UTF-8')</code>, que es lo que hace el profe en <code>recurso.php</code>.</p>
+  <h3>Demo: el mismo dato, con y sin escape</h3>
+  <p class="muted small">Edita la plantilla o el comentario. La vista "sin escape" no se dibuja a propósito; se analiza el HTML en un documento inerte y se muestra qué crearía el navegador.</p>
+  <div id="plantillaApp"></div>
+  <div class="key"><b>Reglas</b><ul class="small"><li>Escapa al <b>mostrar</b> (contexto HTML), no al guardar en la BD.</li><li>Los atributos también: <code>title="{{comentario}}"</code> se rompe con una comilla si no se escapa <code>"</code>.</li><li>Escapar no sustituye a validar, y CSP es una capa extra, no el arreglo.</li></ul></div>
+</section>
+
+<!-- ======================= A4 ======================= -->
+<section id="ejercicios" class="topic" data-sec="a4">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 2 · Práctica</p><h2>A4 · 8 ejercicios de fetch y plantillas</h2></div><button class="mark-btn" data-mark="a4" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">Escribe la función y pulsa <b>Ejecutar pruebas</b>. Tu código corre en un Worker aislado contra el servidor simulado (con tiempo límite de 4 s) y se califica por <b>comportamiento</b>: qué devuelve y qué peticiones manda, no qué tan parecido es.</p>
+  <div id="fetchApp"></div>
+</section>
+
+<!-- ======================= C1 ======================= -->
+<section id="caso" class="topic" data-sec="c1">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 3 · Caso integral</p><h2>C1 · Mapa del caso</h2></div><button class="mark-btn" data-mark="c1" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Repositorio del profe: <code>caso-integral</code>, un portal de recursos (HTML, CSS, JS, PHP, MySQL) con tres funciones: <b>iniciar sesión</b>, <b>ver un recurso</b> y <b>cambiar la contraseña con fetch</b>. Funciona en una demostración pero mezcla datos del navegador con datos confiables. Hay cuentas ficticias: Ana (cliente), Bruno (admin) y Carla (cliente inactiva).</p>
+  <div class="tbl-wrap"><table><thead><tr><th>Archivo</th><th>Qué hace</th><th>Pista</th></tr></thead><tbody>
+    <tr><td><code>public/login.php</code></td><td>Formulario y login; redirige a <code>recurso.php?id=1&amp;rol=…&amp;acceso=1</code></td><td>1, 3, 4</td></tr>
+    <tr><td><code>public/recurso.php</code></td><td>Muestra un recurso con <code>ResourceService::show($_GET, $user)</code></td><td>2, 4</td></tr>
+    <tr><td><code>src/ResourceService.php</code></td><td>8 <code>if</code> anidados con las reglas de acceso</td><td>4, 7</td></tr>
+    <tr><td><code>public/cuenta.php</code> + <code>js/cuenta.js</code></td><td>Formulario que hace <code>fetch</code> con <code>user_id</code> en el JSON</td><td>5</td></tr>
+    <tr><td><code>api/cambiar_password.php</code></td><td>Cambia la contraseña de la cuenta que diga el JSON</td><td>5</td></tr>
+    <tr><td><code>src/Auth.php</code></td><td>Inicia la sesión y obtiene al usuario del <code>$_SESSION</code></td><td>2, 3</td></tr>
+    <tr><td><code>database/portal.sql</code></td><td>3 tablas deliberadamente redundantes</td><td>6</td></tr></tbody></table></div>
+  <h3>Las 8 pistas del profe, en una línea</h3>
+  <ol class="steps">
+    <li><b>Leer el problema.</b> Para cada dato: ¿quién lo envía? ¿quién puede modificarlo? ¿se cree o se comprueba?</li>
+    <li><b>Fuentes confiables.</b> <code>id</code>, <code>rol</code>, <code>acceso</code>, <code>user_id</code> del cliente son datos de solicitud. La cookie solo encuentra la sesión; usuario, estado, rol, recurso y propietario se consultan en la BD.</li>
+    <li><b>Autenticación.</b> Método → campos → credenciales → <code>password_verify</code> → cuenta activa → regenerar sesión. Mensaje general al fallar.</li>
+    <li><b>URL y autorización.</b> Ignorar <code>rol</code> y <code>acceso</code>; matriz rol × propietario × estado × acción; mismo mensaje para inexistente y ajeno.</li>
+    <li><b>Cambiar contraseña.</b> Usuario de la sesión, cuenta activa, contraseña actual, nueva válida, solo esa cuenta, CSRF y qué sesiones invalidar.</li>
+    <li><b>SQL.</b> Una fuente por dato; separar roles y permisos; nombres únicos; <code>NOT NULL</code>; índices en claves foráneas; estados controlados.</li>
+    <li><b>Refactor PHP.</b> Decisiones con nombre, retornos tempranos, <code>match</code>; cambiar una dimensión a la vez.</li>
+    <li><b>Pruebas manuales.</b> Tabla de solicitud, usuario, dato manipulado, esperado y observado (sección C3).</li>
+  </ol>
+  <div class="key warn"><b>Dos hechos verificados en el código del profe</b><ul class="small">
+    <li><code>recurso.php</code> <b>no lee</b> <code>rol</code> ni <code>acceso</code> de la URL. El fallo real es que <b>todo cliente ve cualquier recurso publicado y visible</b> (no consulta <code>accesos_recursos</code>); los parámetros en la URL son un mal ejemplo y una invitación a leerlos.</li>
+    <li><code>cambiar_password.php</code> <b>no exige sesión</b>: con el <code>user_id</code> de otra cuenta y la contraseña actual de esa cuenta, funciona sin iniciar sesión.</li></ul></div>
+  <div class="codebox"><div class="file">src/ResourceService.php (original, recortado)</div><pre class="code" data-lang="php">if ($user !== null) {
+  if ($user['activo'] == 1) {
+    if (isset($request['id'])) {
+      if (is_numeric($request['id'])) {
+        $resource = $this->find((int)$request['id']);
+        if ($resource) {
+          if ($resource['estado'] === 'publicado') {
+            if ($user['rol'] === 'admin') return ['status'=>200,'resource'=>$resource];
+            if ($resource['propietario_id'] == $user['id']) return ['status'=>200,'resource'=>$resource];
+            if ($user['rol'] === 'cliente' &amp;&amp; $resource['visible'] == 1) return ['status'=>200,'resource'=>$resource];
+            return ['status'=>403,'message'=>'Sin permiso'];
+          }
+          return ['status'=>404,'message'=>'No encontrado'];
+        }
+        return ['status'=>404,'message'=>'No encontrado'];
+      }
+      return ['status'=>400,'message'=>'ID inválido'];
+    }
+    return ['status'=>400,'message'=>'Falta ID'];
+  }
+  return ['status'=>403,'message'=>'Cuenta inactiva'];
+}
+return ['status'=>401,'message'=>'Debe iniciar sesión'];</pre></div>
+</section>
+
+<!-- ======================= C2 ======================= -->
+<section id="diag" class="topic" data-sec="c2">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 3 · Caso integral</p><h2>C2 · Diagnóstico: 14 hallazgos</h2></div><button class="mark-btn" data-mark="c2" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">El entregable pide al menos diez observaciones clasificadas por autenticación, autorización, datos, diseño y mantenibilidad. Cada tarjeta dice dónde está, el impacto y la alternativa. La insignia <span class="badge ded">deducido</span> marca lo que sale de mi análisis y no de las pistas del profe.</p>
+  <div id="diagApp"></div>
+</section>
+
+<!-- ======================= C3 ======================= -->
+<section id="pruebas" class="topic" data-sec="c3">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 3 · Caso integral · Pista 8</p><h2>C3 · 14 pruebas manuales</h2></div><button class="mark-btn" data-mark="c3" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">La pista 8 pide una tabla con solicitud, usuario, dato manipulado, resultado esperado y observado. Pulsa el botón: cada prueba corre en un servidor nuevo, en modo original y corregido, y compara el status. Una corrección está completa cuando puedes explicar por qué cada escenario se permite o rechaza y <b>qué dato confiable decidió</b>.</p>
+  <div id="matrizApp"></div>
+</section>
+
+<!-- ======================= C4 ======================= -->
+<section id="refactor" class="topic" data-sec="c4">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 3 · Caso integral</p><h2>C4 · La versión corregida <span class="badge ded">propuesta mía</span></h2></div><button class="mark-btn" data-mark="c4" aria-pressed="false">Marcar como repasado</button></div>
+  <p>Esta es una propuesta que sigue las reglas del README, no la solución del profe. La política de recursos (quién ve qué) es una <b>decisión</b>: explica la tuya.</p>
+  <h3>ResourceService con guard clauses</h3>
+<div class="codebox"><div class="file">src/ResourceService.php (propuesta)</div><pre class="code" data-lang="php">final class ResourceService
+{
+    public function __construct(private PDO $db) {}
+
+    public function show(mixed $id, ?array $user): array
+    {
+        if ($user === null)        return $this->error(401, 'Debe iniciar sesión');
+        if ((int)$user['activo'] !== 1) return $this->error(403, 'Cuenta inactiva');
+
+        $id = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($id === false)         return $this->error(400, 'ID inválido');
+
+        $recurso = $this->buscar($id);
+        if ($recurso === null || !$this->puedeVer($user, $recurso)) {
+            return $this->error(404, 'No encontrado');   // mismo mensaje: no revela qué existe
+        }
+        return ['status' => 200, 'resource' => $recurso];
+    }
+
+    private function puedeVer(array $user, array $recurso): bool
+    {
+        return match (true) {
+            $user['rol'] === 'admin'                              => true,
+            (int)$recurso['propietario_id'] === (int)$user['id'] => true,
+            default => $recurso['estado'] === 'publicado'
+                       &amp;&amp; $this->tieneAcceso((int)$user['id'], (int)$recurso['id']),
+        };
+    }
+
+    private function tieneAcceso(int $usuarioId, int $recursoId): bool
+    {
+        $q = $this->db->prepare('SELECT 1 FROM accesos_recursos
+                                 WHERE recurso_id = :r AND usuario_id = :u AND puede_ver = 1');
+        $q->execute(['r' => $recursoId, 'u' => $usuarioId]);
+        return (bool)$q->fetchColumn();
+    }
+    private function error(int $status, string $mensaje): array { return ['status' => $status, 'message' => $mensaje]; }
+}</pre></div>
+  <h3>cambiar_password.php</h3>
+<div class="codebox"><div class="file">api/cambiar_password.php (propuesta)</div><pre class="code" data-lang="php">Auth::start(); header('Content-Type: application/json');
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); exit; }
+
+$db   = Database::connection();
+$user = Auth::user($db);                                   // ← la cuenta sale de la SESIÓN
+if ($user === null)            { http_response_code(401); exit(json_encode(['message' => 'Debe iniciar sesión'])); }
+if ((int)$user['activo'] !== 1) { http_response_code(403); exit(json_encode(['message' => 'Cuenta inactiva'])); }
+
+$body = json_decode(file_get_contents('php://input'), true) ?: [];
+if (!hash_equals($_SESSION['csrf'] ?? '', (string)($body['csrf'] ?? ''))) {
+    http_response_code(403); exit(json_encode(['message' => 'Token CSRF inválido']));
+}
+$hash = $db->prepare('SELECT password FROM usuarios WHERE id = :id');
+$hash->execute(['id' => $user['id']]);
+if (!password_verify((string)($body['current_password'] ?? ''), (string)$hash->fetchColumn())) {
+    http_response_code(400); exit(json_encode(['message' => 'No se pudo cambiar la contraseña']));
+}
+$nueva = (string)($body['new_password'] ?? '');
+if (strlen($nueva) &lt; 8 || !preg_match('/[A-Za-z]/', $nueva) || !preg_match('/\d/', $nueva)) {
+    http_response_code(422); exit(json_encode(['message' => 'La nueva contraseña no cumple los requisitos']));
+}
+$db->prepare('UPDATE usuarios SET password = :p WHERE id = :id')
+   ->execute(['p' => password_hash($nueva, PASSWORD_DEFAULT), 'id' => $user['id']]);
+echo json_encode(['message' => 'Contraseña actualizada']);</pre></div>
+  <h3>SQL: qué cambiar y por qué</h3>
+  <div class="tbl-wrap"><table><thead><tr><th>Problema en <code>portal.sql</code></th><th>Cambio</th><th>Inconsistencia que evita</th></tr></thead><tbody>
+    <tr><td><code>email</code> y <code>correo</code> idénticos</td><td>Una sola columna <code>email VARCHAR(180) NOT NULL UNIQUE</code></td><td>Actualizar una y dejar la otra vieja; correos repetidos</td></tr>
+    <tr><td><code>rol</code> y <code>rol_nombre</code>; <code>rol</code> también en accesos</td><td>Tabla <code>roles</code> y <code>usuarios.rol_id</code> (FK)</td><td>Roles escritos distinto; permisos repetidos</td></tr>
+    <tr><td><code>propietario_nombre</code> / <code>propietario_email</code> en recursos</td><td>Quitarlos; se obtienen con <code>JOIN</code> a <code>usuarios</code></td><td>El nombre cambia en un lugar y no en el otro</td></tr>
+    <tr><td><code>estado</code> como texto libre</td><td><code>ENUM('borrador','publicado','archivado')</code> o tabla de estados</td><td>Valores como <code>'publicdo'</code></td></tr>
+    <tr><td>Columnas sin <code>NOT NULL</code>, sin índices</td><td><code>NOT NULL</code> en lo obligatorio e índices en las claves foráneas</td><td>Filas incompletas; consultas lentas</td></tr>
+    <tr><td><code>accesos_recursos</code> permite la misma pareja repetida</td><td><code>UNIQUE (recurso_id, usuario_id)</code></td><td>Permisos contradictorios para el mismo par</td></tr></tbody></table></div>
+  <p class="small muted">Recuerda la pista 6: no normalices por reflejo; cada cambio debe resolver una inconsistencia concreta. Y el checklist del README: sesión como fuente de identidad, cuenta activa, rol desde la BD, recurso existente y relación autorizada, consultas con parámetros, <code>password_hash</code>/<code>password_verify</code>, respuestas sin SQL ni rutas internas, y validaciones críticas repetidas en PHP.</p>
+</section>
+
+<!-- ======================= QUIZ / ABIERTAS ======================= -->
+<section id="quiz" class="topic" data-sec="qz">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Repaso</p><h2>Preguntas directas</h2></div><button class="mark-btn" data-mark="qz" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">Elige una opción: se marca al instante y aparece la explicación. Filtra por tema con las pestañas.</p>
+  <div id="quizApp"></div>
+</section>
+<section id="abiertas" class="topic" data-sec="ab">
+  <div class="sec-head"><div class="meta"><p class="eyebrow">Bloque 4 · Repaso</p><h2>Preguntas abiertas</h2></div><button class="mark-btn" data-mark="ab" aria-pressed="false">Marcar como repasado</button></div>
+  <p class="muted">Escribe tu respuesta como en el examen (se guarda en este navegador), luego abre la respuesta modelo y marca qué puntos mencionaste.</p>
+  <div id="abiertasApp"></div>
+</section>
+
+<footer>
+  <p>Fuentes: 12 presentaciones del Ing. Leonel Domínguez (clases 1ra a 8va, 20/08, 01/09, 08/09 y 22/09) · repositorio <code>donaldosorio/Examen-Desarrollo-Web</code> (laboratorio "caso-integral": README, 8 pistas, código PHP y SQL). Universidad Mariano Gálvez · Desarrollo Web.</p>
+  <p>Insignias: <span class="badge ded">deducido</span> inferido de los documentos, no dicho por el profesor. El servidor de los laboratorios es un simulador en el navegador: no hace peticiones de red.</p>
+  <p class="credit">Desarrollado por Oskar · <span>@migit</span></p>
+</footer>
+</main>
+</div>
+
+<div class="fab-dock">
+  <button class="board-fab" id="inkFab" type="button" aria-controls="inkBar" aria-expanded="false" title="Anotar sobre la página (el stylus siempre dibuja)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg><span>Anotar</span>
+  </button>
+  <button class="board-fab" id="boardFab" type="button" aria-controls="board" aria-expanded="false" title="Mostrar u ocultar la pizarra">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Pizarra</span>
+  </button>
+</div>
+<section class="board" id="board" hidden aria-label="Pizarra de borrador">
+  <div class="board-bar" id="boardBar">
+    <span class="board-title"><span class="grip" aria-hidden="true">⋮⋮</span>Pizarra</span>
+    <span class="spacer"></span>
+    <label class="sr-only" for="boardBg">Fondo</label>
+    <select id="boardBg" title="Fondo">
+      <option value="plain">Liso</option>
+      <option value="grid">Cuadrícula</option>
+    </select>
+    <button class="bd-btn" id="boardHide" type="button" title="Ocultar (se conserva el dibujo)" aria-label="Ocultar pizarra"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+  </div>
+  <div class="board-tools" role="toolbar" aria-label="Herramientas de la pizarra">
+    <button class="bd-btn" type="button" data-tool="pen" aria-pressed="true" title="Lápiz (P)" aria-label="Lápiz"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+    <button class="bd-btn" type="button" data-tool="eraser" aria-pressed="false" title="Borrador (E)" aria-label="Borrador"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L11 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></button>
+    <span class="board-sep"></span>
+    <button class="bd-btn" type="button" data-color="--text" aria-pressed="true" title="Tinta" aria-label="Color tinta"><span class="bd-sw" style="--sw:var(--text)"></span></button>
+    <button class="bd-btn" type="button" data-color="--accent" aria-pressed="false" title="Azul" aria-label="Color azul"><span class="bd-sw" style="--sw:var(--accent)"></span></button>
+    <button class="bd-btn" type="button" data-color="--err" aria-pressed="false" title="Rojo" aria-label="Color rojo"><span class="bd-sw" style="--sw:var(--err)"></span></button>
+    <button class="bd-btn" type="button" data-color="--ok" aria-pressed="false" title="Verde" aria-label="Color verde"><span class="bd-sw" style="--sw:var(--ok)"></span></button>
+    <span class="board-sep"></span>
+    <button class="bd-btn" type="button" data-size="5" aria-pressed="false" title="Fino" aria-label="Trazo fino"><span class="bd-dot" style="width:4px;height:4px"></span></button>
+    <button class="bd-btn" type="button" data-size="8" aria-pressed="true" title="Medio" aria-label="Trazo medio"><span class="bd-dot" style="width:7px;height:7px"></span></button>
+    <button class="bd-btn" type="button" data-size="14" aria-pressed="false" title="Grueso" aria-label="Trazo grueso"><span class="bd-dot" style="width:11px;height:11px"></span></button>
+    <span class="bd-group">
+      <button class="bd-btn" type="button" id="boardUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+      <button class="bd-btn" type="button" id="boardRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+      <button class="bd-btn danger" type="button" id="boardClear" title="Borrar todo" aria-label="Borrar todo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </span>
+  </div>
+  <div class="board-area" id="boardArea">
+    <canvas id="boardBase"></canvas>
+    <canvas id="boardLive"></canvas>
+    <div class="board-eraser" id="boardEraser"></div>
+  </div>
+  <div class="board-resize" id="boardResize" title="Redimensionar" aria-hidden="true"></div>
+</section>
+
+
+<script src="../../js/web2-api.js"></script>
+<script src="../../js/web2-datos.js"></script>
+<script src="../../js/main.js"></script>
+<script src="../../js/comunes.js"></script>
+<script src="../../js/web2.js"></script>
+</body>
+</html>
